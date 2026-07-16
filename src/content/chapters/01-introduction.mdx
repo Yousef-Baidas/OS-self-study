@@ -1,0 +1,191 @@
+---
+number: 1
+title: "Introduction"
+slug: "introduction"
+summary: "What an operating system is and does — from resource allocation and dual-mode protection to the storage-device hierarchy, multiprocessing, multiprogramming, and the interrupt-driven cycle that keeps a computer running."
+topics:
+  - "What is an operating system?"
+  - "Computer system organization"
+  - "Computer startup"
+  - "Storage-device hierarchy"
+  - "Multiprocessing and clustered systems"
+  - "Multiprogramming and multitasking"
+  - "Interrupts"
+  - "Operating-system operations and dual mode"
+  - "Kernel data structures"
+slideCount: 39
+status: "complete"
+---
+
+import Callout from '../../components/Callout.astro';
+
+import Figure from '../../components/Figure.astro';
+
+import CodeBlock from '../../components/CodeBlock.astro';
+
+import StorageHierarchy from '../../widgets/ch01/StorageHierarchy.svelte';
+
+import InterruptCycle from '../../widgets/ch01/InterruptCycle.svelte';
+
+<Callout type="key">
+  By the end of this chapter, you should be able to explain what an operating system is and the
+  two ways of thinking about its job (resource allocator, control program); describe how a
+  computer starts up and organizes its hardware around a shared bus and memory; place a piece of
+  data correctly within the storage-device hierarchy; distinguish multiprocessing from
+  multiprogramming and multitasking; trace the interrupt-driven cycle that lets a CPU respond to
+  devices and software events; and explain why an operating system needs a protected, dual-mode
+  boundary between itself and the programs it runs.
+</Callout>
+
+## What Is an Operating System?
+
+A modern computer system is built from four kinds of components working together: the
+**hardware** — the CPU, memory, and I/O devices that do the actual physical work; the
+**operating system**, which controls and coordinates that hardware on behalf of everything else;
+the **application programs** — word processors, browsers, games — that define the ways you
+actually want to use the machine; and the **users** themselves, whether people, other computers,
+or other programs.
+
+These pieces don't talk to each other directly in a flat way — they're layered. You, the user,
+sit at the top, interacting with application programs and utilities such as a compiler, an
+assembler, a text editor, or a database system. Those programs, in turn, rely on the operating
+system to reach the hardware underneath. The operating system is the one layer that touches
+everything: it sits directly on top of the hardware and provides the services every layer above
+it depends on.
+
+<Figure
+  src="figures/ch01/system-structure.svg"
+  alt="System structure diagram: users and their application programs sit on top of the operating system, which sits directly on top of the computer hardware"
+  caption="Figure 1.1 — Computer system structure: users and programs layered above the operating system, which sits directly above the hardware."
+/>
+
+You've almost certainly used several operating systems already: Windows, macOS, Linux, Unix, and
+Ubuntu are all common examples — some are commercial products, others (like Linux and Ubuntu) are
+open-source.
+
+So what does an operating system actually do? At its simplest, it **manages the hardware**, gives
+application programs a foundation to build on, and acts as an **intermediary** between you and the
+hardware — smoothing over the fact that raw hardware is far too complicated and inconsistent for
+you or a typical program to deal with directly. Its goals are to let user programs execute
+conveniently, to make the computer easy to use, and to use the underlying hardware efficiently.
+
+Whose convenience matters depends on who you ask. From a **user's** point of view — someone
+sitting at a PC or a workstation — what matters is convenience, ease of use, and good performance;
+nobody using the machine day-to-day cares how efficiently its resources are being utilized under
+the hood. But systems are frequently shared among many users at once (think of a server, or a
+mainframe), and in that setting the operating system has to balance those users' needs so all of
+them stay reasonably happy, not just the loudest one.
+
+Zoom out to the **system's** own point of view, though, and the operating system looks like
+something else entirely: a **resource allocator** — the entity responsible for managing and
+allocating the machine's resources (CPU time, memory space, storage space for files, I/O devices)
+among the many programs and users competing for them.
+
+<Callout type="note">
+  An operating system wears two hats at once. As a **resource allocator**, it decides who gets
+  the CPU, memory, storage, and I/O devices, and for how long. As a **control program**, it
+  manages the execution of user programs to prevent errors and improper use of the computer —
+  keeping one misbehaving program from taking down the whole system.
+</Callout>
+
+Put those two roles together and you get the most common working definition: the operating system
+is simply **the one program that is always running** on the computer, for as long as it's powered
+on. That program is the **kernel** — the core of the operating system. Everything else on the
+machine is either a **system program**, associated with the operating system but not part of the
+kernel itself, or an **application program**, which covers everything not associated with the
+operating system's own operation.
+
+## Computer System Organization
+
+Zoom in on the hardware layer itself, and a modern computer system's organization is fairly simple
+to state: one or more **CPUs** and a number of **device controllers** are all connected through a
+**common bus** that provides access to **shared memory**. Every device controller manages a
+specific type of device — a disk, a USB port, a graphics adapter — and each CPU and device
+controller can run concurrently, all competing for memory cycles across that same shared bus.
+
+<Figure
+  src="figures/ch01/computer-organization.svg"
+  alt="Computer system organization diagram: one or more CPUs and several device controllers, each connected to a common system bus that leads to shared memory"
+  caption="Figure 1.2 — Computer system organization: CPUs and device controllers sharing a common bus to memory."
+/>
+
+## Computer Startup
+
+Before any of that hardware can do useful work, it has to be woken up. When a computer is powered
+on or rebooted, it needs an initial program to run — this is the **bootstrap program**. The
+bootstrap program initializes every part of the system, from CPU registers to device controllers
+to memory contents, and its job is to find and load the operating system **kernel**, then start
+executing it.
+
+Because the bootstrap program has to exist and be reliable before anything else on the machine has
+been loaded, it's stored in **firmware** — read-only memory built into the hardware itself (ROM or
+EPROM) rather than on a disk that could fail to be readable. This is exactly what you're watching
+when a machine shows a manufacturer's boot screen right after you power it on, followed shortly by
+the operating system's own loading screen as the kernel comes up into memory.
+
+## Storage-Device Hierarchy
+
+Not all storage on a computer is created equal — some of it is blazingly fast but tiny, some of it
+is enormous but slow, and understanding where a given piece of data sits tells you a lot about how
+the system is using it. Storage systems are organized into a **hierarchy**, by speed, cost, and
+volatility.
+
+At the very top, closest to the CPU, are **registers** and **cache** — the fastest, smallest, and
+most expensive storage in the system, and both are **volatile**: they lose their contents entirely
+if power is removed. Just below them sits **main memory** (RAM), still volatile, still fast, but
+larger and cheaper than cache. That's the boundary line on the hierarchy: everything above it
+disappears when the power goes out; everything below it doesn't.
+
+Below the volatile/nonvolatile line comes **secondary storage** — an extension of main memory that
+provides large, **nonvolatile** capacity so a system's data survives a power cycle. This tier
+begins with **nonvolatile memory** devices, continues through **hard-disk drives**, then
+**optical disks**, and finally **magnetic tapes** at the very bottom — slower and larger at each
+step down, all the way to tape, which is slow enough that it's typically used only for backups,
+not everyday access.
+
+<Callout type="note">
+  A **hard-disk drive** stores data magnetically on rigid, rotating platters, organized into
+  tracks and sectors and managed by a disk controller. An **SSD** (solid-state drive) is
+  nonvolatile like a hard disk, built on different underlying technology, and is faster than a
+  hard disk for most workloads.
+</Callout>
+
+A related, simpler way to think about access is that each level of the hierarchy typically only
+reaches its immediate neighbor directly — the CPU's registers access cache, cache accesses main
+memory, and main memory accesses the hard disk — rather than every level reaching all the way down
+to disk on its own.
+
+However you measure a piece of data's size, the units are standard: a **bit** is the smallest unit
+(a single 0 or 1), a **byte** is 8 bits, and a **word** is whatever size a particular computer
+architecture's hardware natively works with. Beyond a byte, storage sizes scale up in powers of
+1024: kilobyte (KB), megabyte (MB), gigabyte (GB), terabyte (TB), and petabyte (PB).
+
+<StorageHierarchy client:visible />
+
+## Multiprocessing and Clustered Systems
+
+Not every system runs on a single processor. **Parallel systems** — also called multiprocessor or
+tightly coupled systems — use more than one CPU in close communication, sharing the same computer
+bus and sometimes the same clock, memory, and peripheral devices. Adding processors this way
+brings three real advantages: increased **throughput** (more work gets done per unit time),
+**economy of scale** (multiple processors sharing peripherals, storage, and power supplies costs
+less per processor than separate machines would), and increased **reliability** — if one
+processor fails, the system can degrade gracefully instead of failing completely, continuing to
+run at reduced capacity rather than stopping outright.
+
+There are two ways to organize multiple processors. In **asymmetric multiprocessing**, each
+processor is assigned a specific, predefined task. In **symmetric multiprocessing (SMP)**, by
+contrast, every processor is a peer — each one runs an identical copy of the operating system and
+can perform any of the available tasks, with all processors sharing the same memory. A
+**dual-core design** takes this a step further by placing multiple processor cores on a single
+physical chip, again sharing memory, rather than using multiple separate chips.
+
+Beyond a single machine, **clustered systems** link together multiple complete computer systems,
+typically sharing storage via a **storage-area network (SAN)**, to provide high-availability
+service that survives the failure of any individual node. Clustering, like multiprocessing, comes
+in an asymmetric form — where one machine sits in **hot-standby** mode, ready to take over if the
+primary fails — and a symmetric form, where multiple nodes all run applications simultaneously and
+monitor each other. Clusters are also used for **high-performance computing (HPC)**, where
+applications are written to explicitly take advantage of parallelization across nodes,
+coordinated by software such as a **distributed lock manager (DLM)** that arbitrates access to
+shared resources across the cluster.
