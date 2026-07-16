@@ -1,8 +1,9 @@
 ---
 // Page shell — locked location (D-03/UI-SPEC), inherited by every later phase.
-// Minimal shell only: sidebar/bottom-nav slots are empty until Plans 02/03 fill
-// them, and the theme toggle region is reserved but unwired until Plan 04 adds
-// the blocking inline <head> script (D-17). Do not add that script here yet.
+// Plan 02 fills the `sidebar` slot (persistent desktop nav, see the `.shell`
+// flex wrapper below); `bottom-nav` slot stays empty until Plan 03. The theme
+// toggle region is reserved but unwired until Plan 04 adds the blocking inline
+// <head> script (D-17). Do not add that script here yet.
 import '../styles/global.css';
 
 interface Props {
@@ -28,11 +29,13 @@ const { title = 'OS-self-study' } = Astro.props;
       <div class="theme-toggle-slot" aria-hidden="true"></div>
     </header>
 
-    <slot name="sidebar" />
+    <div class="shell">
+      <slot name="sidebar" />
 
-    <main>
-      <slot />
-    </main>
+      <main>
+        <slot />
+      </main>
+    </div>
 
     <slot name="bottom-nav" />
 
@@ -74,7 +77,17 @@ const { title = 'OS-self-study' } = Astro.props;
         height: 44px;
       }
 
+      .shell {
+        display: flex;
+
+        align-items: flex-start;
+      }
+
       main {
+        flex: 1;
+
+        min-width: 0;
+
         max-width: 720px;
 
         margin: 0 auto;

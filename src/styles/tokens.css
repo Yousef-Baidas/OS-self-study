@@ -17,6 +17,19 @@
 
   --color-accent: #4f46e5;
 
+  --color-accent-hover: #4338ca;
+
+  /* Typography — minimal subset needed by Plan 02's nav/TOC/prev-next (UI-SPEC
+     "Typography"). Full 4-size scale (Body/Display too) lands in Plan 04 — do
+     not treat this as the final type system. */
+  --font-size-label: 14px;
+
+  --font-size-heading: 20px;
+
+  --font-weight-regular: 400;
+
+  --font-weight-semibold: 600;
+
   /* Spacing scale — multiples of 4 only (UI-SPEC "Spacing Scale") */
   --space-xs: 4px;
 

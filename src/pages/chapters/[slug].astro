@@ -1,10 +1,20 @@
 ---
 // Slug-based chapter route (D-10) — canonical identity is the frontmatter
-// slug, not the filename. Full TOC/prev-next/sidebar wiring lands in Plans 02/03;
-// this route just proves getStaticPaths + render() over the chapters collection.
+// slug, not the filename. Sidebar nav + prev/next boundary-safe links land
+// here (Plan 02); the "On this page" TOC follows (Plan 02 Task 3).
 import { getCollection, render } from 'astro:content';
 
 import Layout from '../../components/Layout.astro';
+
+import Sidebar from '../../components/Sidebar.astro';
+
+import ChevronLeft from '../../components/icons/ChevronLeft.astro';
+
+import ChevronRight from '../../components/icons/ChevronRight.astro';
+
+import { getAdjacentChapters, type ChapterMeta } from '../../lib/chapters';
+
+import { joinBase } from '../../lib/withBase';
 
 export async function getStaticPaths() {
 
@@ -20,9 +30,25 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 
 const { Content } = await render(entry);
+
+// Recomputed independently of getStaticPaths (Astro does not carry that
+// function's locals into the page body) — same pattern Sidebar.astro uses.
+const chapterEntries = await getCollection('chapters');
+
+const chapterMetas: ChapterMeta[] = chapterEntries.map((chapterEntry) => ({
+  number: chapterEntry.data.number,
+
+  slug: chapterEntry.id,
+
+  title: chapterEntry.data.title,
+}));
+
+const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 ---
 
 <Layout title={`${entry.data.title} — OS-self-study`}>
+  <Sidebar slot="sidebar" currentSlug={entry.id} />
+
   <h1>{entry.data.title}</h1>
 
   {
@@ -35,6 +61,61 @@ const { Content } = await render(entry);
   }
 
   <Content />
+
+  <nav class="chapter-nav" aria-label="Chapter navigation">
+    {
+      prev ? (
+        <a
+          class="chapter-nav-link chapter-nav-link--prev"
+          href={joinBase(import.meta.env.BASE_URL, `chapters/${prev.slug}`)}
+        >
+          <ChevronLeft class="chapter-nav-icon" width="20" height="20" />
+
+          <span class="chapter-nav-text">
+            <span class="chapter-nav-label">Previous</span>
+
+            <span class="chapter-nav-title">{prev.title}</span>
+          </span>
+        </a>
+      ) : (
+        <span class="chapter-nav-link chapter-nav-link--disabled" aria-disabled="true">
+          <ChevronLeft class="chapter-nav-icon" width="20" height="20" />
+
+          <span class="chapter-nav-text">
+            <span class="chapter-nav-label">Previous</span>
+          </span>
+        </span>
+      )
+    }
+
+    {
+      next ? (
+        <a
+          class="chapter-nav-link chapter-nav-link--next"
+          href={joinBase(import.meta.env.BASE_URL, `chapters/${next.slug}`)}
+        >
+          <span class="chapter-nav-text chapter-nav-text--right">
+            <span class="chapter-nav-label">Next</span>
+
+            <span class="chapter-nav-title">{next.title}</span>
+          </span>
+
+          <ChevronRight class="chapter-nav-icon" width="20" height="20" />
+        </a>
+      ) : (
+        <span
+          class="chapter-nav-link chapter-nav-link--next chapter-nav-link--disabled"
+          aria-disabled="true"
+        >
+          <span class="chapter-nav-text chapter-nav-text--right">
+            <span class="chapter-nav-label">Next</span>
+          </span>
+
+          <ChevronRight class="chapter-nav-icon" width="20" height="20" />
+        </span>
+      )
+    }
+  </nav>
 </Layout>
 
 <style>
@@ -62,5 +143,91 @@ const { Content } = await render(entry);
     font-weight: 600;
 
     font-size: 12px;
+  }
+
+  /* Prev/next chapter footer row (NAV-04) — two cells, boundary-safe: a null
+     side renders a disabled (not dead-linked) <span> twin instead of an <a>. */
+  .chapter-nav {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: var(--space-md);
+
+    margin-top: var(--space-2xl);
+
+    padding-top: var(--space-lg);
+
+    border-top: 1px solid var(--color-border);
+  }
+
+  .chapter-nav-link {
+    display: flex;
+
+    align-items: center;
+
+    gap: var(--space-sm);
+
+    padding: var(--space-md);
+
+    border: 1px solid var(--color-border);
+
+    border-radius: 4px;
+
+    color: var(--color-text);
+
+    text-decoration: none;
+  }
+
+  .chapter-nav-link--next {
+    justify-content: flex-end;
+
+    text-align: right;
+  }
+
+  a.chapter-nav-link:hover {
+    border-color: var(--color-accent);
+
+    color: var(--color-accent-hover);
+  }
+
+  .chapter-nav-link--disabled {
+    color: var(--color-text-muted);
+
+    border-style: dashed;
+
+    opacity: 0.5;
+
+    cursor: default;
+  }
+
+  .chapter-nav-icon {
+    flex-shrink: 0;
+  }
+
+  .chapter-nav-text {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: var(--space-xs);
+
+    min-width: 0;
+  }
+
+  .chapter-nav-text--right {
+    align-items: flex-end;
+  }
+
+  .chapter-nav-label {
+    font-size: var(--font-size-label);
+
+    color: var(--color-text-muted);
+  }
+
+  .chapter-nav-title {
+    font-size: var(--font-size-heading);
+
+    font-weight: var(--font-weight-semibold);
   }
 </style>
