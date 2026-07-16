@@ -1,7 +1,8 @@
 /* Design tokens — locked location (D-03), inherited verbatim by every later phase.
-   This is the MINIMAL subset needed to render intentionally now: light theme only,
-   no dark overrides, no typography scale yet. Full light/dark system + type scale
-   land in Plan 04 — do not treat this file's current contents as final. */
+   Full system: light + dark color sets, typography scale, spacing, radii, elevation.
+   Light values are the :root defaults; dark overrides live under
+   :root[data-theme="dark"] and are applied before first paint by the blocking
+   inline theme script in Layout.astro (D-17), so there is no flash-of-wrong-theme. */
 
 :root {
   /* Color — light theme (UI-SPEC "Color" table) */
@@ -19,9 +20,33 @@
 
   --color-accent-hover: #4338ca;
 
-  /* Typography — UI-SPEC's exact 4-size scale (Label/Body/Heading/Display).
-     Plan 04 still owns the full dark-theme + font-family system; this file
-     only carries the subset each plan's concrete components need. */
+  --color-destructive: #dc2626;
+
+  /* Derived surface tints — accent washes used for active states / callouts.
+     color-mix keeps them locked to the accent hue so a token change cascades. */
+  --color-accent-wash: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg));
+
+  --color-accent-wash-strong: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg));
+
+  --color-surface-raised: #ffffff;
+
+  --color-warning: #b45309;
+
+  --color-warning-wash: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg));
+
+  /* Hero atmosphere — a faint dot grid, reading areas stay clean. */
+  --dot-grid: color-mix(in srgb, var(--color-text) 6%, transparent);
+
+  /* Typography — Inter Variable (UI/body/headings), JetBrains Mono (code + labels) */
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --font-mono:
+    'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+
+  /* Four locked sizes (Label/Body/Heading/Display) + one micro for mono-caps labels. */
+  --font-size-micro: 12px;
+
   --font-size-label: 14px;
 
   --font-size-body: 16px;
@@ -30,9 +55,17 @@
 
   --font-size-display: 28px;
 
+  --line-height-tight: 1.2;
+
+  --line-height-snug: 1.35;
+
+  --line-height-relaxed: 1.7;
+
   --font-weight-regular: 400;
 
   --font-weight-semibold: 600;
+
+  --tracking-caps: 0.08em;
 
   /* Spacing scale — multiples of 4 only (UI-SPEC "Spacing Scale") */
   --space-xs: 4px;
@@ -49,6 +82,74 @@
 
   --space-3xl: 64px;
 
+  /* Radii */
+  --radius-sm: 6px;
+
+  --radius-md: 10px;
+
+  --radius-lg: 14px;
+
+  /* Elevation — soft, low-spread shadows tuned for a light paper surface. */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.05);
+
+  --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.06), 0 8px 20px -6px rgba(15, 23, 42, 0.12);
+
+  --shadow-lg: 0 12px 32px -8px rgba(15, 23, 42, 0.18);
+
   /* Single breakpoint — desktop sidebar vs. mobile bottom-nav (UI-SPEC "Layout & Interaction") */
   --bp-desktop: 1024px;
+}
+
+:root[data-theme='dark'] {
+  /* Color — dark theme (UI-SPEC "Color" — dark table) */
+  --color-bg: #0f172a;
+
+  --color-surface: #1e293b;
+
+  --color-border: #334155;
+
+  --color-text: #f1f5f9;
+
+  --color-text-muted: #94a3b8;
+
+  --color-accent: #6366f1;
+
+  --color-accent-hover: #818cf8;
+
+  --color-destructive: #f87171;
+
+  --color-accent-wash: color-mix(in srgb, var(--color-accent) 16%, var(--color-bg));
+
+  --color-accent-wash-strong: color-mix(in srgb, var(--color-accent) 24%, var(--color-bg));
+
+  /* Raised surfaces read one step lighter than the page in dark mode. */
+  --color-surface-raised: #24334a;
+
+  --color-warning: #fbbf24;
+
+  --color-warning-wash: color-mix(in srgb, var(--color-warning) 14%, var(--color-bg));
+
+  --dot-grid: color-mix(in srgb, var(--color-text) 8%, transparent);
+
+  /* Deeper, softer shadows over a dark ground. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 24px -8px rgba(0, 0, 0, 0.55);
+
+  --shadow-lg: 0 16px 40px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Respect reduced-motion for every transition/animation in the system. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+
+    scroll-behavior: auto !important;
+  }
 }
