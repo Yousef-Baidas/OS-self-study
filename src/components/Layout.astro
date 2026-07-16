@@ -1,17 +1,21 @@
 ---
 // Page shell — locked location (D-03/UI-SPEC), inherited by every later phase.
-// Plan 02 fills the `sidebar` slot (persistent desktop nav, see the `.shell`
-// flex wrapper below); Plan 03 fills `bottom-nav` with BottomNav.astro (a
-// slot default, so a page could still override it) and adds the mobile
-// chapters drawer (Sidebar's "drawer" variant) as permanent page chrome so
-// D-14 works from any page, not only chapter pages. The theme toggle region
-// is reserved but unwired until Plan 04 adds the blocking inline <head>
-// script (D-17). Do not add that script here yet.
+// Fills: sidebar slot (Plan 02 desktop nav), bottom-nav slot (Plan 03 mobile
+// nav, a slot default so a page can override), the mobile chapters drawer
+// (Sidebar "drawer" variant, permanent chrome so D-14 works from any page),
+// and — this plan — the header theme toggle + the blocking no-flash theme
+// script (D-16/D-17, NAV-05).
 import '../styles/global.css';
+
+import { joinBase } from '../lib/withBase';
 
 import BottomNav from './BottomNav.astro';
 
 import Sidebar from './Sidebar.astro';
+
+import Sun from './icons/Sun.astro';
+
+import Moon from './icons/Moon.astro';
 
 interface Props {
   title?: string;
@@ -20,6 +24,8 @@ interface Props {
 }
 
 const { title = 'OS-self-study', currentSlug } = Astro.props;
+
+const faviconHref = joinBase(import.meta.env.BASE_URL, 'favicon.svg');
 ---
 
 <html lang="en">
@@ -28,14 +34,66 @@ const { title = 'OS-self-study', currentSlug } = Astro.props;
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <link rel="icon" type="image/svg+xml" href={faviconHref} />
+
     <title>{title}</title>
+
+    {/* No-flash theme: runs before first paint. Validates the stored value
+        against the ['light','dark'] allowlist, else follows the OS preference,
+        and assigns ONLY to document.documentElement.dataset.theme — never a
+        markup/HTML sink (D-17, threat T-01-07). is:inline is required so it is
+        not deferred as a module (which would reintroduce the flash). */}
+    <script is:inline>
+      (function () {
+        var allowed = ['light', 'dark'];
+
+        var stored = null;
+
+        try {
+          stored = localStorage.getItem('theme');
+        } catch (e) {
+          stored = null;
+        }
+
+        var theme =
+          allowed.indexOf(stored) !== -1
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
 
   <body>
     <header class="site-header">
-      <span class="site-title">OS-self-study</span>
+      <a class="brand" href={joinBase(import.meta.env.BASE_URL, '')} aria-label="OS-self-study home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="26" height="26">
+            <rect width="32" height="32" rx="7" fill="var(--color-accent)"></rect>
 
-      <div class="theme-toggle-slot" aria-hidden="true"></div>
+            <path
+              d="M9 11l4 5-4 5"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+
+            <rect x="15.5" y="20" width="8" height="2.4" rx="1.2" fill="#fff"></rect>
+          </svg>
+        </span>
+
+        <span class="brand-name">OS-self-study</span>
+      </a>
+
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="icon-moon"><Moon /></span>
+
+        <span class="icon-sun"><Sun /></span>
+      </button>
     </header>
 
     <div class="shell">
@@ -53,14 +111,49 @@ const { title = 'OS-self-study', currentSlug } = Astro.props;
     <Sidebar variant="drawer" currentSlug={currentSlug} />
 
     <footer class="site-footer">
-      <p>OS-self-study — CE357 Operating Systems study notes.</p>
+      <p><span class="eyebrow">CE357</span> OS-self-study — Operating Systems study notes.</p>
     </footer>
+
+    <script>
+      const btn = document.getElementById('theme-toggle');
+
+      const current = () => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+
+      if (btn) {
+        btn.setAttribute('aria-pressed', String(current() === 'dark'));
+
+        btn.addEventListener('click', () => {
+          const next = current() === 'dark' ? 'light' : 'dark';
+
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {
+            /* private mode — the attribute flip below still applies for the session */
+          }
+
+          document.documentElement.dataset.theme = next;
+
+          btn.setAttribute('aria-pressed', String(next === 'dark'));
+        });
+      }
+
+      // Subtle elevation on the sticky header once the page scrolls.
+      const header = document.querySelector('.site-header');
+
+      const onScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 4);
+
+      onScroll();
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+    </script>
 
     <style>
       .site-header {
         position: sticky;
 
         top: 0;
+
+        z-index: 50;
 
         display: flex;
 
@@ -72,22 +165,101 @@ const { title = 'OS-self-study', currentSlug } = Astro.props;
 
         padding: 0 var(--space-md);
 
-        background: var(--color-surface);
+        background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+
+        backdrop-filter: saturate(1.4) blur(10px);
 
         border-bottom: 1px solid var(--color-border);
+
+        transition: box-shadow 0.2s ease;
       }
 
-      .site-title {
-        font-weight: 600;
+      .site-header.is-scrolled {
+        box-shadow: var(--shadow-sm);
+      }
+
+      .brand {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: var(--space-sm);
+
+        text-decoration: none;
 
         color: var(--color-text);
       }
 
-      /* Reserved 44x44 hit-target region for Plan 04's theme toggle button. */
-      .theme-toggle-slot {
+      .brand-mark {
+        display: inline-flex;
+
+        filter: drop-shadow(0 1px 2px rgba(79, 70, 229, 0.35));
+      }
+
+      .brand-name {
+        font-weight: var(--font-weight-semibold);
+
+        letter-spacing: -0.01em;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
         width: 44px;
 
         height: 44px;
+
+        padding: 0;
+
+        border: 1px solid transparent;
+
+        border-radius: var(--radius-md);
+
+        background: transparent;
+
+        color: var(--color-text-muted);
+
+        cursor: pointer;
+
+        transition:
+          color 0.15s ease,
+          background 0.15s ease,
+          border-color 0.15s ease;
+      }
+
+      .theme-toggle:hover {
+        color: var(--color-text);
+
+        background: var(--color-surface);
+
+        border-color: var(--color-border);
+      }
+
+      .theme-toggle svg {
+        width: 20px;
+
+        height: 20px;
+      }
+
+      /* Icon swap: Moon when light (tap → dark), Sun when dark (tap → light). */
+      .icon-sun {
+        display: none;
+      }
+
+      .icon-moon {
+        display: inline-flex;
+      }
+
+      :global(:root[data-theme='dark']) .icon-sun {
+        display: inline-flex;
+      }
+
+      :global(:root[data-theme='dark']) .icon-moon {
+        display: none;
       }
 
       .shell {
@@ -101,19 +273,43 @@ const { title = 'OS-self-study', currentSlug } = Astro.props;
 
         min-width: 0;
 
-        max-width: 720px;
+        max-width: 760px;
 
         margin: 0 auto;
 
-        padding: var(--space-lg) var(--space-md);
+        padding: var(--space-2xl) var(--space-lg) var(--space-3xl);
+      }
+
+      @media (max-width: 1023px) {
+        main {
+          padding-bottom: calc(56px + var(--space-3xl));
+        }
       }
 
       .site-footer {
-        padding: var(--space-lg) var(--space-md);
+        display: flex;
+
+        align-items: center;
+
+        gap: var(--space-sm);
+
+        padding: var(--space-xl) var(--space-lg);
 
         color: var(--color-text-muted);
 
+        font-size: var(--font-size-label);
+
         border-top: 1px solid var(--color-border);
+      }
+
+      .site-footer p {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: var(--space-sm);
+
+        margin: 0;
       }
     </style>
   </body>
