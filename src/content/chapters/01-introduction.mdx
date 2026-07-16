@@ -21,8 +21,6 @@ import Callout from '../../components/Callout.astro';
 
 import Figure from '../../components/Figure.astro';
 
-import CodeBlock from '../../components/CodeBlock.astro';
-
 import StorageHierarchy from '../../widgets/ch01/StorageHierarchy.svelte';
 
 import InterruptCycle from '../../widgets/ch01/InterruptCycle.svelte';
@@ -189,3 +187,157 @@ monitor each other. Clusters are also used for **high-performance computing (HPC
 applications are written to explicitly take advantage of parallelization across nodes,
 coordinated by software such as a **distributed lock manager (DLM)** that arbitrates access to
 shared resources across the cluster.
+
+## Multiprogramming and Multitasking
+
+A single CPU can only truly execute one instruction at a time, but keeping it constantly busy is
+what makes a system efficient — an idle CPU is wasted capacity. **Multiprogramming** solves this
+at the batch-processing level: the operating system keeps several jobs in memory at once, and
+whenever the job currently running has to wait — say, for an I/O operation to complete — the OS
+simply switches the CPU over to another job that's ready to run, rather than letting the CPU sit
+idle. **Job scheduling** is the process of deciding which of the jobs sitting in memory gets the
+CPU next.
+
+**Multitasking** (or **timesharing**) is a direct extension of the same idea, but tuned for
+interactive use: the CPU switches between jobs so frequently that you can interact with each
+program while it runs, with response times of `<1s` that feel immediate. Each user's running
+program is called a **process**. Multiple processes are kept in memory at once via **CPU
+scheduling** (deciding which ready process runs next) and, if memory fills up, **swapping**
+(moving a process temporarily out to disk to make room). **Virtual memory** allows the system to
+run processes that aren't even entirely loaded into memory at once, further stretching how many
+jobs can be handled concurrently.
+
+<Figure
+  src="figures/ch01/memory-address-space.svg"
+  alt="Memory address space diagram: the operating system and four separate jobs laid out in memory from address 0 up to 512M"
+  caption="Figure 1.3 — A memory address space divided between the operating system and four concurrently loaded jobs, from 0 to 512M."
+/>
+
+## Interrupts
+
+An operating system has to react to events as they happen, rather than only doing work it planned
+in advance — and the mechanism it reacts through is the **interrupt**. Interrupts come from two
+directions: a **hardware interrupt** is raised by a device — for example, once it finishes an I/O
+operation — while a **software interrupt** (also called an **exception** or a **trap**) is
+triggered by the currently executing program itself, whether through an error condition (like
+division by zero) or a deliberate request for an operating-system service. Left unmanaged, related
+problems like an infinite loop or one process interfering with another are exactly the kind of
+thing the interrupt mechanism, together with the OS, exists to detect and contain.
+
+However it originates, an interrupt is ultimately just a signal. A hardware interrupt is delivered
+by sending a signal to the CPU, usually over the system bus; a software interrupt is delivered by
+executing a special operation called a **system call** (sometimes called a **monitor call**).
+Every computer architecture implements its own version of this mechanism, but a handful of
+functions are common across all of them.
+
+<Callout type="note">
+  When an interrupt occurs, control transfers to a fixed location — generally through the
+  **interrupt vector**, a table holding the addresses of every interrupt service routine the
+  system knows about. Before handing control over, the architecture must first save the address
+  of the instruction that was interrupted, so execution can resume from exactly where it left
+  off. A **trap** (or exception) is simply a software-generated interrupt, caused either by an
+  error or by a request for a service. Because of all this, it's fair to say an operating system
+  is fundamentally **interrupt driven**.
+</Callout>
+
+<InterruptCycle client:visible />
+
+## Operating-System Operations and Dual Mode
+
+Because the operating system is responsible for protecting itself and every other program on the
+machine from a misbehaving process, hardware provides **dual-mode operation** to keep that
+boundary enforceable. The CPU can execute in one of two modes: **user mode**, in which ordinary
+application code runs, and **kernel mode** — also called supervisor mode, system mode, or
+privileged mode — in which the operating system itself runs, with access to capabilities user
+code isn't allowed to touch.
+
+This distinction is implemented in hardware via a single **mode bit**: 0 for kernel mode, 1 for
+user mode. Certain instructions are marked **privileged** and can only execute while the mode bit
+is set to kernel — attempting one in user mode is rejected. A **system call** is how a user
+program deliberately switches the mode bit to kernel mode so the operating system can perform a
+privileged operation on its behalf; when that operation finishes and control returns to the user
+program, the mode bit resets back to user mode.
+
+<Figure
+  src="figures/ch01/mode-transition.svg"
+  alt="Diagram of the transition from user mode to kernel mode: a user process executes, calls a system call which traps and sets the mode bit to kernel, the kernel executes the system call, then returns and resets the mode bit to user"
+  caption="Figure 1.4 — Transitioning from user mode to kernel mode and back: a system call traps into the kernel, then returns and resets the mode bit."
+/>
+
+Above the kernel, a **shell** provides the actual user interface to the system, whether as a
+graphical interface or a command-line interface. The kernel underneath is generally organized
+into a handful of core responsibility areas: process management, memory management, storage
+management, the file system, CPU scheduling, I/O management, and networking and security.
+
+## Kernel Data Structures
+
+A kernel spends most of its time tracking things — running processes, open files, free memory
+blocks — and it leans on a small set of standard data structures to do it efficiently, the same
+ones you'd meet in any data-structures course. A **linked list** stores elements in sequence via
+pointers rather than contiguous memory: a **singly linked list** links each element only to the
+next, a **doubly linked list** links each element to both its neighbors (letting you traverse in
+either direction), and a **circular linked list** links its last element back to its first,
+forming a loop with no fixed end.
+
+For data that benefits from ordering, kernels reach for a **binary search tree**: a structure
+where every node's left child holds a value less than or equal to the node's own value, and its
+right child holds a value greater than it. Searching an arbitrary binary search tree takes O(n)
+time in the worst case, but a **balanced** binary search tree keeps that search down to O(lg n) by
+ensuring the tree never grows lopsided.
+
+Two more structures round out the kernel's toolkit: a **hash function** maps data to a **hash
+map**, giving near-constant-time lookup by key rather than needing to search; and a **bitmap** is
+simply a string of n binary digits, each one representing the on/off status of one of n items — a
+compact way to track, say, which blocks of a disk are currently free.
+
+The Linux kernel actually ships real, minimal versions of exactly these structures, in the headers
+the slide points you to directly:
+
+```c title="linux-kernel-data-structures.c" {2,10,18}
+// <linux/list.h> — the doubly linked list every kernel subsystem embeds
+struct list_head {
+  struct list_head *next, *prev;
+};
+
+// <linux/rbtree.h> — the balanced tree backing kernel maps/schedulers
+struct rb_node {
+  unsigned long __rb_parent_color;
+  struct rb_node *rb_right;
+  struct rb_node *rb_left;
+};
+
+struct rb_root {
+  struct rb_node *rb_node;
+};
+
+// <linux/kfifo.h> — the generic ring-buffer FIFO
+struct __kfifo {
+  unsigned int in, out;   // write/read positions
+  unsigned int mask;      // size - 1 (power-of-2 sizing)
+  unsigned int esize;     // element size
+  void *data;             // buffer pointer
+};
+```
+
+<Callout type="note">
+  Notice that `list_head` and `rb_node` don't hold a payload themselves — they're embedded
+  directly inside the struct that owns the data, rather than the owning struct holding a pointer
+  to a separate container. This is a well-known Linux kernel idiom called an **intrusive data
+  structure**: the list/tree machinery lives right next to the data it organizes, so the kernel
+  doesn't need a second allocation just to link something into a list.
+</Callout>
+
+<Callout type="key">
+  **Key takeaways:** an operating system is the one program always running on a machine — the
+  **kernel** — acting simultaneously as a **resource allocator** and a **control program**.
+  Hardware organizes itself around a shared bus connecting CPUs, device controllers, and memory,
+  and boots via a firmware-stored **bootstrap program**. Storage is layered into a **hierarchy**
+  from fast, volatile registers and cache down to slow, nonvolatile tape. Systems scale up
+  through **multiprocessing** and **clustering**, and scale their CPU's utilization through
+  **multiprogramming** and **multitasking**. The CPU stays responsive to the outside world
+  through **interrupts**, delivered via the **interrupt vector** to an interrupt service routine,
+  and protects itself from user code through **dual-mode operation** enforced by a hardware
+  **mode bit**. Underneath it all, the kernel tracks its own state using the same standard data
+  structures — linked lists, balanced trees, hash maps, and bitmaps — that the Linux kernel
+  itself ships in its own headers.
+</Callout>
