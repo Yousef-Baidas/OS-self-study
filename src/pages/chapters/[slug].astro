@@ -132,21 +132,27 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 
     color: var(--color-text-muted);
 
-    font-size: 14px;
+    font-size: var(--font-size-label);
   }
 
   .preview-badge {
-    padding: 2px var(--space-sm);
+    padding: 3px var(--space-sm);
 
     border-radius: 999px;
 
     background: var(--color-accent);
 
-    color: var(--color-bg);
+    color: #ffffff;
 
-    font-weight: 600;
+    font-family: var(--font-mono);
 
-    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+
+    font-size: var(--font-size-micro);
+
+    letter-spacing: var(--tracking-caps);
+
+    text-transform: uppercase;
   }
 
   /* Prev/next chapter footer row (NAV-04) — two cells, boundary-safe: a null
@@ -176,11 +182,18 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 
     border: 1px solid var(--color-border);
 
-    border-radius: 4px;
+    border-radius: var(--radius-md);
+
+    background: var(--color-surface-raised);
 
     color: var(--color-text);
 
     text-decoration: none;
+
+    transition:
+      transform 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
   .chapter-nav-link--next {
@@ -190,9 +203,11 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
   }
 
   a.chapter-nav-link:hover {
-    border-color: var(--color-accent);
+    transform: translateY(-2px);
 
-    color: var(--color-accent-hover);
+    border-color: color-mix(in srgb, var(--color-text) 30%, var(--color-border));
+
+    box-shadow: var(--shadow-md);
   }
 
   .chapter-nav-link--disabled {
@@ -224,7 +239,15 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
   }
 
   .chapter-nav-label {
-    font-size: var(--font-size-label);
+    font-family: var(--font-mono);
+
+    font-size: var(--font-size-micro);
+
+    font-weight: var(--font-weight-semibold);
+
+    letter-spacing: var(--tracking-caps);
+
+    text-transform: uppercase;
 
     color: var(--color-text-muted);
   }
