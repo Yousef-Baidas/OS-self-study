@@ -1,0 +1,42 @@
+---
+// Shared code presentation — wraps astro-expressive-code's <Code> component so
+// every later chapter renders annotated C with the same framed panel + an
+// optional caption. Markdown code fences in .mdx are already styled by the
+// expressive-code config (themes/font/frame); use this component when a chapter
+// needs a code block from a prop/string plus a caption.
+import { Code } from 'astro-expressive-code/components';
+
+interface Props {
+  code: string;
+
+  lang?: string;
+
+  title?: string;
+
+  meta?: string;
+
+  caption?: string;
+}
+
+const { code, lang = 'c', title, meta, caption } = Astro.props;
+---
+
+<figure class="codeblock">
+  <Code code={code} lang={lang} title={title} meta={meta} />
+
+  {caption && <figcaption class="codeblock__caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .codeblock {
+    margin: var(--space-lg) 0;
+  }
+
+  .codeblock__caption {
+    margin-top: var(--space-xs);
+
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-label);
+  }
+</style>

@@ -24,13 +24,14 @@ alongside this file.
   will hold definitions, key points, and warnings once real chapters exist.
 </Callout>
 
-Annotated code blocks use `astro-expressive-code`'s meta-string syntax for
-line highlights and labels — here's `fork()` creating a child process:
+Annotated code blocks use `astro-expressive-code` — a filename tab, a
+highlighted line, and diff markers, here with `fork()` creating a child process:
 
-```c {"Fork a new process:":3-4} ins={6}
+```c title="fork.c" {5} ins={7}
 #include <unistd.h>
 
 int main() {
+  // Fork a new process:
   pid_t pid = fork();
 
   if (pid == 0) {
@@ -40,6 +41,12 @@ int main() {
   return 0;
 }
 ```
+
+<Callout type="key">
+  `fork()` returns **twice** — `0` in the freshly created child, and the child's
+  PID in the parent. That single return value is how each process learns which
+  one it is.
+</Callout>
 
 <Figure
   src="figures/example/example-diagram.svg"
