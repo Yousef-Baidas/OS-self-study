@@ -1,0 +1,94 @@
+---
+// Page shell — locked location (D-03/UI-SPEC), inherited by every later phase.
+// Minimal shell only: sidebar/bottom-nav slots are empty until Plans 02/03 fill
+// them, and the theme toggle region is reserved but unwired until Plan 04 adds
+// the blocking inline <head> script (D-17). Do not add that script here yet.
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'OS-self-study' } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{title}</title>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <span class="site-title">OS-self-study</span>
+
+      <div class="theme-toggle-slot" aria-hidden="true"></div>
+    </header>
+
+    <slot name="sidebar" />
+
+    <main>
+      <slot />
+    </main>
+
+    <slot name="bottom-nav" />
+
+    <footer class="site-footer">
+      <p>OS-self-study — CE357 Operating Systems study notes.</p>
+    </footer>
+
+    <style>
+      .site-header {
+        position: sticky;
+
+        top: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        height: 56px;
+
+        padding: 0 var(--space-md);
+
+        background: var(--color-surface);
+
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .site-title {
+        font-weight: 600;
+
+        color: var(--color-text);
+      }
+
+      /* Reserved 44x44 hit-target region for Plan 04's theme toggle button. */
+      .theme-toggle-slot {
+        width: 44px;
+
+        height: 44px;
+      }
+
+      main {
+        max-width: 720px;
+
+        margin: 0 auto;
+
+        padding: var(--space-lg) var(--space-md);
+      }
+
+      .site-footer {
+        padding: var(--space-lg) var(--space-md);
+
+        color: var(--color-text-muted);
+
+        border-top: 1px solid var(--color-border);
+      }
+    </style>
+  </body>
+</html>

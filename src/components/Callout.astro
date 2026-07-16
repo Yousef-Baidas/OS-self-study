@@ -1,0 +1,45 @@
+---
+// Definition / key-point / warning box (D-08's annotated-chapter Callout).
+// Locked component — later chapter phases use this, never re-create it.
+interface Props {
+  type: 'note' | 'key' | 'warning';
+}
+
+const { type } = Astro.props;
+---
+
+<div class:list={['callout', `callout--${type}`]}>
+  <slot />
+</div>
+
+<style>
+  .callout {
+    padding: var(--space-md);
+
+    margin: var(--space-lg) 0;
+
+    border: 1px solid var(--color-border);
+
+    border-left-width: 4px;
+
+    border-radius: 4px;
+
+    background: var(--color-surface);
+
+    color: var(--color-text);
+  }
+
+  .callout--note {
+    border-left-color: var(--color-accent);
+  }
+
+  .callout--key {
+    border-left-color: var(--color-text);
+  }
+
+  .callout--warning {
+    /* #DC2626 is UI-SPEC's --color-destructive value; not adding that token to
+       the minimal Task 1 subset yet, so it's hardcoded here (Plan 04 formalizes it). */
+    border-left-color: #dc2626;
+  }
+</style>

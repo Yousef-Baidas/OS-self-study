@@ -1,0 +1,29 @@
+/* Global base styles. Real @fontsource wiring (Inter Variable + JetBrains Mono)
+   lands in Plan 04 — this file uses system-font fallback stacks only for now. */
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+
+  background: var(--color-bg);
+
+  color: var(--color-text);
+
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+/* The one focus-indicator color in the system (UI-SPEC "reserved for" list item 3). */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+
+  outline-offset: 2px;
+}

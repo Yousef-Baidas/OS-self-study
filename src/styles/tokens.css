@@ -1,0 +1,37 @@
+/* Design tokens — locked location (D-03), inherited verbatim by every later phase.
+   This is the MINIMAL subset needed to render intentionally now: light theme only,
+   no dark overrides, no typography scale yet. Full light/dark system + type scale
+   land in Plan 04 — do not treat this file's current contents as final. */
+
+:root {
+  /* Color — light theme (UI-SPEC "Color" table) */
+  --color-bg: #ffffff;
+
+  --color-surface: #f1f5f9;
+
+  --color-border: #e2e8f0;
+
+  --color-text: #0f172a;
+
+  --color-text-muted: #64748b;
+
+  --color-accent: #4f46e5;
+
+  /* Spacing scale — multiples of 4 only (UI-SPEC "Spacing Scale") */
+  --space-xs: 4px;
+
+  --space-sm: 8px;
+
+  --space-md: 16px;
+
+  --space-lg: 24px;
+
+  --space-xl: 32px;
+
+  --space-2xl: 48px;
+
+  --space-3xl: 64px;
+
+  /* Single breakpoint — desktop sidebar vs. mobile bottom-nav (UI-SPEC "Layout & Interaction") */
+  --bp-desktop: 1024px;
+}
