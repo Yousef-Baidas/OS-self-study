@@ -66,6 +66,31 @@
   // against a second trigger overlapping an in-progress replay.
   let replaying = $state(false);
 
+  // Monotonic token identifying the current replay. Bumping it cancels any
+  // in-flight loop: the loop re-reads it after every await and bails before
+  // mutating `step` once its own token is stale. Not $state -- it is never
+  // rendered, only compared inside the async closure.
+  let replayToken = 0;
+
+  function cancelReplay() {
+
+    replayToken += 1;
+
+    replaying = false;
+  }
+
+  // Leaving Explore mode -- including SimFrame's Reset, which snaps `mode`
+  // back to 'guided' -- must stop an in-flight replay at once. `step`/`mode`
+  // are two-way bound to SimFrame, so an uncancelled loop would keep
+  // advancing the now-guided step on its own for several seconds.
+  $effect(() => {
+
+    if (mode !== 'explore') {
+
+      cancelReplay();
+    }
+  });
+
   async function triggerInterrupt() {
 
     if (replaying) {
@@ -74,6 +99,8 @@
     }
 
     replaying = true;
+
+    const token = (replayToken += 1);
 
     step = 0;
 
@@ -87,6 +114,13 @@
       if (stepDelayMs > 0) {
 
         await new Promise((resolve) => setTimeout(resolve, stepDelayMs));
+      }
+
+      // Cancelled (mode left Explore / Reset) or superseded by a newer
+      // trigger -- never mutate `step` once our token is stale.
+      if (token !== replayToken) {
+
+        return;
       }
 
       step = index;
