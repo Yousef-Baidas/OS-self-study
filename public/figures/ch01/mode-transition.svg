@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" role="img" aria-labelledby="mode-transition-title">
+  <title id="mode-transition-title">Transition from user mode to kernel mode via a system call trap and return</title>
+  <desc>A user process executing in user mode calls a system call, which traps into kernel mode (mode bit set to 0) to execute the system call, then returns to user mode (mode bit set to 1) to resume the user process.</desc>
+  <style>
+    /* light (default) — mirrors tokens.css :root */
+    .box     { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1.5; }      /* --color-surface / --color-border */
+    .box--accent { fill: #4f46e5; stroke: #4338ca; }                     /* --color-accent / --color-accent-hover */
+    .label   { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; fill: #0f172a; } /* --color-text */
+    .label--on-accent { fill: #ffffff; }
+    .caption { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; fill: #64748b; } /* --color-text-muted */
+    .arrow   { stroke: #64748b; stroke-width: 1.5; fill: none; }
+
+    /* additions beyond the locked template — same token set, new roles this figure needs */
+    .box--raised { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }  /* --color-surface-raised / --color-border */
+    .arrowhead   { fill: #64748b; }                                      /* --color-text-muted, matches .arrow stroke */
+
+    @media (prefers-color-scheme: dark) {
+      .box     { fill: #1e293b; stroke: #334155; }                       /* --color-surface / --color-border (dark) */
+      .box--accent { fill: #6366f1; stroke: #818cf8; }                   /* --color-accent / --color-accent-hover (dark) */
+      .label   { fill: #f1f5f9; }                                        /* --color-text (dark) */
+      .caption { fill: #94a3b8; }                                        /* --color-text-muted (dark) */
+      .arrow   { stroke: #94a3b8; }
+      .box--raised { fill: #24334a; stroke: #334155; }                   /* --color-surface-raised / --color-border (dark) */
+      .arrowhead   { fill: #94a3b8; }                                    /* --color-text-muted (dark) */
+    }
+  </style>
+  <defs>
+    <marker id="arrowhead-end" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path class="arrowhead" d="M0,0 L8,4 L0,8 Z" />
+    </marker>
+  </defs>
+
+  <!-- user-mode lane -->
+  <rect class="box--raised" x="10" y="10" width="620" height="120" rx="4" />
+  <text class="caption" x="620" y="28" text-anchor="end">user mode &#183; mode bit = 1</text>
+
+  <rect class="box" x="30" y="55" width="170" height="50" rx="4" />
+  <text class="label" x="115" y="76" text-anchor="middle">
+    <tspan x="115" dy="0">user process</tspan>
+    <tspan x="115" dy="16">executing</tspan>
+  </text>
+
+  <line class="arrow" x1="200" y1="80" x2="228" y2="80" marker-end="url(#arrowhead-end)" />
+
+  <rect class="box" x="230" y="55" width="170" height="50" rx="4" />
+  <text class="label" x="315" y="76" text-anchor="middle">
+    <tspan x="315" dy="0">calls</tspan>
+    <tspan x="315" dy="16">system call</tspan>
+  </text>
+
+  <rect class="box" x="430" y="55" width="190" height="50" rx="4" />
+  <text class="label" x="525" y="76" text-anchor="middle">
+    <tspan x="525" dy="0">return from</tspan>
+    <tspan x="525" dy="16">system call</tspan>
+  </text>
+
+  <!-- lane divider -->
+  <line class="arrow" x1="10" y1="130" x2="630" y2="130" />
+
+  <!-- kernel-mode lane -->
+  <rect class="box" x="10" y="130" width="620" height="120" rx="4" />
+  <text class="caption" x="20" y="148" text-anchor="start">kernel</text>
+  <text class="caption" x="620" y="240" text-anchor="end">kernel mode &#183; mode bit = 0</text>
+
+  <rect class="box--raised" x="250" y="175" width="190" height="50" rx="4" />
+  <text class="label" x="345" y="196" text-anchor="middle">
+    <tspan x="345" dy="0">execute</tspan>
+    <tspan x="345" dy="16">system call</tspan>
+  </text>
+
+  <!-- trap: user calls system call -> kernel executes it -->
+  <line class="arrow" x1="300" y1="107" x2="312" y2="173" marker-end="url(#arrowhead-end)" />
+  <text class="caption" x="238" y="140" text-anchor="end">
+    <tspan x="238" dy="0">trap</tspan>
+    <tspan x="238" dy="14">mode bit = 0</tspan>
+  </text>
+
+  <!-- return: kernel finishes -> back to user mode -->
+  <line class="arrow" x1="420" y1="173" x2="460" y2="107" marker-end="url(#arrowhead-end)" />
+  <text class="caption" x="470" y="140" text-anchor="start">
+    <tspan x="470" dy="0">return</tspan>
+    <tspan x="470" dy="14">mode bit = 1</tspan>
+  </text>
+</svg>

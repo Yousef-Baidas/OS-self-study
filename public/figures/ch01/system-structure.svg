@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" role="img" aria-labelledby="system-structure-title">
+  <title id="system-structure-title">System structure: users, programs, the operating system, and hardware</title>
+  <desc>Users at the top connect down through system and application programs to the operating system, which sits on top of the computer hardware.</desc>
+  <style>
+    /* light (default) — mirrors tokens.css :root */
+    .box     { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1.5; }      /* --color-surface / --color-border */
+    .box--accent { fill: #4f46e5; stroke: #4338ca; }                     /* --color-accent / --color-accent-hover */
+    .label   { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; fill: #0f172a; } /* --color-text */
+    .label--on-accent { fill: #ffffff; }
+    .caption { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; fill: #64748b; } /* --color-text-muted */
+    .arrow   { stroke: #64748b; stroke-width: 1.5; fill: none; }
+
+    /* additions beyond the locked template — same token set, new roles this figure needs */
+    .box--raised { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }  /* --color-surface-raised / --color-border */
+    .arrowhead   { fill: #64748b; }                                      /* --color-text-muted, matches .arrow stroke */
+
+    @media (prefers-color-scheme: dark) {
+      .box     { fill: #1e293b; stroke: #334155; }                       /* --color-surface / --color-border (dark) */
+      .box--accent { fill: #6366f1; stroke: #818cf8; }                   /* --color-accent / --color-accent-hover (dark) */
+      .label   { fill: #f1f5f9; }                                        /* --color-text (dark) */
+      .caption { fill: #94a3b8; }                                        /* --color-text-muted (dark) */
+      .arrow   { stroke: #94a3b8; }
+      .box--raised { fill: #24334a; stroke: #334155; }                   /* --color-surface-raised / --color-border (dark) */
+      .arrowhead   { fill: #94a3b8; }                                    /* --color-text-muted (dark) */
+    }
+  </style>
+  <defs>
+    <marker id="arrowhead-end" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path class="arrowhead" d="M0,0 L8,4 L0,8 Z" />
+    </marker>
+    <marker id="arrowhead-start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+      <path class="arrowhead" d="M0,0 L8,4 L0,8 Z" />
+    </marker>
+  </defs>
+
+  <!-- user row -->
+  <rect class="box--raised" x="20" y="20" width="90" height="50" rx="4" />
+  <text class="label" x="65" y="50" text-anchor="middle">user 1</text>
+
+  <rect class="box--raised" x="135" y="20" width="90" height="50" rx="4" />
+  <text class="label" x="180" y="50" text-anchor="middle">user 2</text>
+
+  <rect class="box--raised" x="250" y="20" width="90" height="50" rx="4" />
+  <text class="label" x="295" y="50" text-anchor="middle">user 3</text>
+
+  <text class="label" x="400" y="50" text-anchor="middle">&#8230;</text>
+
+  <rect class="box--raised" x="520" y="20" width="90" height="50" rx="4" />
+  <text class="label" x="565" y="50" text-anchor="middle">user n</text>
+
+  <!-- double-headed arrows: each user talks to the program layer below -->
+  <line class="arrow" x1="65" y1="70" x2="65" y2="140" marker-start="url(#arrowhead-start)" marker-end="url(#arrowhead-end)" />
+  <line class="arrow" x1="180" y1="70" x2="180" y2="140" marker-start="url(#arrowhead-start)" marker-end="url(#arrowhead-end)" />
+  <line class="arrow" x1="295" y1="70" x2="295" y2="140" marker-start="url(#arrowhead-start)" marker-end="url(#arrowhead-end)" />
+  <line class="arrow" x1="565" y1="70" x2="565" y2="140" marker-start="url(#arrowhead-start)" marker-end="url(#arrowhead-end)" />
+
+  <!-- cascading layer stack: app/system programs -> operating system -> hardware -->
+  <rect class="box" x="10" y="140" width="620" height="110" rx="4" />
+  <text class="label" x="65" y="160" text-anchor="middle">compiler</text>
+  <text class="label" x="180" y="160" text-anchor="middle">assembler</text>
+  <text class="label" x="295" y="160" text-anchor="middle">text editor</text>
+  <text class="label" x="400" y="160" text-anchor="middle">&#8230;</text>
+  <text class="label" x="565" y="155" text-anchor="middle">
+    <tspan x="565" dy="0">database</tspan>
+    <tspan x="565" dy="14">system</tspan>
+  </text>
+  <text class="label" x="320" y="180" text-anchor="middle">system and application programs</text>
+
+  <rect class="box" x="110" y="190" width="420" height="110" rx="4" />
+  <text class="label" x="320" y="218" text-anchor="middle">operating system</text>
+
+  <rect class="box" x="210" y="240" width="220" height="110" rx="4" />
+  <text class="label" x="320" y="300" text-anchor="middle">computer hardware</text>
+</svg>

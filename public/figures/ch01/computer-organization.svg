@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="computer-organization-title">
+  <title id="computer-organization-title">Computer system organization: CPU and device controllers on a shared bus with memory</title>
+  <desc>The CPU, disk controller, USB controller, and graphics adapter each connect to a common system bus, which also connects to shared memory. Disks hang off the disk controller; mouse, keyboard, and printer hang off the USB controller; a monitor hangs off the graphics adapter.</desc>
+  <style>
+    /* light (default) — mirrors tokens.css :root */
+    .box     { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1.5; }      /* --color-surface / --color-border */
+    .box--accent { fill: #4f46e5; stroke: #4338ca; }                     /* --color-accent / --color-accent-hover */
+    .label   { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; fill: #0f172a; } /* --color-text */
+    .label--on-accent { fill: #ffffff; }
+    .caption { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; fill: #64748b; } /* --color-text-muted */
+    .arrow   { stroke: #64748b; stroke-width: 1.5; fill: none; }
+
+    /* additions beyond the locked template — same token set, new roles this figure needs */
+    .box--raised { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }  /* --color-surface-raised / --color-border */
+
+    @media (prefers-color-scheme: dark) {
+      .box     { fill: #1e293b; stroke: #334155; }                       /* --color-surface / --color-border (dark) */
+      .box--accent { fill: #6366f1; stroke: #818cf8; }                   /* --color-accent / --color-accent-hover (dark) */
+      .label   { fill: #f1f5f9; }                                        /* --color-text (dark) */
+      .caption { fill: #94a3b8; }                                        /* --color-text-muted (dark) */
+      .arrow   { stroke: #94a3b8; }
+      .box--raised { fill: #24334a; stroke: #334155; }                   /* --color-surface-raised / --color-border (dark) */
+    }
+  </style>
+
+  <!-- peripherals above their controllers -->
+  <rect class="box--raised" x="160" y="90" width="34" height="26" rx="3" />
+  <rect class="box--raised" x="204" y="90" width="34" height="26" rx="3" />
+  <text class="caption" x="195" y="80" text-anchor="middle">disks</text>
+  <line class="arrow" x1="195" y1="116" x2="195" y2="160" />
+
+  <text class="caption" x="300" y="70" text-anchor="middle">mouse</text>
+  <text class="caption" x="370" y="70" text-anchor="middle">keyboard</text>
+  <text class="caption" x="440" y="70" text-anchor="middle">printer</text>
+  <line class="arrow" x1="300" y1="78" x2="330" y2="160" />
+  <line class="arrow" x1="370" y1="78" x2="390" y2="160" />
+  <line class="arrow" x1="440" y1="78" x2="450" y2="160" />
+
+  <rect class="box--raised" x="558" y="85" width="44" height="30" rx="3" />
+  <text class="caption" x="580" y="75" text-anchor="middle">monitor</text>
+  <line class="arrow" x1="580" y1="115" x2="580" y2="160" />
+
+  <!-- controllers row -->
+  <rect class="box" x="10" y="160" width="90" height="60" rx="4" />
+  <text class="label" x="55" y="195" text-anchor="middle">CPU</text>
+
+  <rect class="box" x="140" y="160" width="110" height="60" rx="4" />
+  <text class="label" x="195" y="185" text-anchor="middle">
+    <tspan x="195" dy="0">disk</tspan>
+    <tspan x="195" dy="16">controller</tspan>
+  </text>
+
+  <rect class="box" x="290" y="160" width="200" height="60" rx="4" />
+  <text class="label" x="390" y="195" text-anchor="middle">USB controller</text>
+
+  <rect class="box" x="530" y="160" width="100" height="60" rx="4" />
+  <text class="label" x="580" y="185" text-anchor="middle">
+    <tspan x="580" dy="0">graphics</tspan>
+    <tspan x="580" dy="16">adapter</tspan>
+  </text>
+
+  <!-- system bus -->
+  <line class="arrow" x1="55" y1="220" x2="55" y2="250" />
+  <line class="arrow" x1="195" y1="220" x2="195" y2="250" />
+  <line class="arrow" x1="390" y1="220" x2="390" y2="250" />
+  <line class="arrow" x1="580" y1="220" x2="580" y2="250" />
+  <line class="arrow" x1="55" y1="250" x2="580" y2="250" />
+  <text class="caption" x="240" y="244" text-anchor="middle">system bus</text>
+
+  <!-- shared memory -->
+  <line class="arrow" x1="360" y1="250" x2="360" y2="290" />
+  <rect class="box" x="290" y="290" width="140" height="50" rx="4" />
+  <text class="label" x="360" y="320" text-anchor="middle">memory</text>
+</svg>
