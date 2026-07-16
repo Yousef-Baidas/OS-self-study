@@ -90,6 +90,43 @@
     mode = next;
   }
 
+  // Radiogroup keyboard model (WAI-ARIA): roving tabindex keeps exactly one
+  // segment in the tab order (the checked one), and Left/Up / Right/Down move
+  // selection between segments. Refs let the handler move focus onto the
+  // newly-selected segment, as the pattern requires.
+  let guidedRadio: HTMLButtonElement | undefined = $state();
+
+  let exploreRadio: HTMLButtonElement | undefined = $state();
+
+  function focusMode(target: 'guided' | 'explore') {
+
+    // Only move focus if the mode actually became the target — selecting a
+    // locked Explore is a no-op, so focus stays on the current segment.
+    if (mode === target) {
+
+      (target === 'guided' ? guidedRadio : exploreRadio)?.focus();
+    }
+  }
+
+  function onModeToggleKeydown(event: KeyboardEvent) {
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+
+      event.preventDefault();
+
+      selectMode('guided');
+
+      focusMode('guided');
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+
+      event.preventDefault();
+
+      selectMode('explore');
+
+      focusMode('explore');
+    }
+  }
+
   // Bonus keyboard layer beyond native <button> focus/Enter/Space (SimFrame
   // contract's "Keyboard" rule) — ArrowLeft/ArrowRight mirror Previous/Step,
   // Home mirrors Reset, while any control in the row has focus.
@@ -97,10 +134,23 @@
 
     if (event.key === 'ArrowLeft') {
 
+      // Mirrors Previous, which only steps in Guided mode. Without this guard
+      // the arrows would still mutate `step` while the always-enabled Reset
+      // button has focus in Explore mode.
+      if (mode !== 'guided') {
+
+        return;
+      }
+
       event.preventDefault();
 
       goPrevious();
     } else if (event.key === 'ArrowRight') {
+
+      if (mode !== 'guided') {
+
+        return;
+      }
 
       event.preventDefault();
 
@@ -131,10 +181,13 @@
     <button
       type="button"
       role="radio"
+      bind:this={guidedRadio}
+      tabindex={mode === 'guided' ? 0 : -1}
       aria-checked={mode === 'guided'}
       class="sim-frame__mode-segment"
       class:sim-frame__mode-segment--active={mode === 'guided'}
       onclick={() => selectMode('guided')}
+      onkeydown={onModeToggleKeydown}
     >
       Guided
     </button>
@@ -142,12 +195,15 @@
     <button
       type="button"
       role="radio"
+      bind:this={exploreRadio}
+      tabindex={mode === 'explore' ? 0 : -1}
       aria-checked={mode === 'explore'}
       aria-disabled={!exploreUnlocked}
       class="sim-frame__mode-segment"
       class:sim-frame__mode-segment--active={mode === 'explore'}
       class:sim-frame__mode-segment--locked={!exploreUnlocked}
       onclick={() => selectMode('explore')}
+      onkeydown={onModeToggleKeydown}
     >
       Explore
     </button>
