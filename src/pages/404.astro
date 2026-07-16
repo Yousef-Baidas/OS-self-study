@@ -1,0 +1,112 @@
+---
+// Styled 404 (D-01 polish bar) — Astro auto-serves this for any unmatched
+// route in both `astro dev` and the static GitHub Pages build; the project's
+// own base path makes this the page GitHub Pages falls back to for a
+// mistyped/moved URL under /OS-self-study/.
+import Layout from '../components/Layout.astro';
+
+import { joinBase } from '../lib/withBase';
+
+const homeHref = joinBase(import.meta.env.BASE_URL, '');
+
+const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/example');
+---
+
+<Layout title="Page not found — OS-self-study">
+  <div class="empty-state">
+    <h1>Page not found</h1>
+
+    <p>
+      That page doesn't exist — it may have moved, or the link has a typo. Head back to the
+      chapter list or home.
+    </p>
+
+    <div class="empty-state-actions">
+      <a class="cta cta--primary" href={homeHref}>Back to home</a>
+
+      <a class="cta cta--secondary" href={chaptersHref}>Browse chapters</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .empty-state {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: var(--space-md);
+
+    max-width: 480px;
+
+    margin: var(--space-3xl) auto;
+  }
+
+  .empty-state h1 {
+    margin: 0;
+
+    color: var(--color-text);
+
+    font-size: var(--font-size-display);
+
+    font-weight: var(--font-weight-semibold);
+
+    line-height: 1.15;
+  }
+
+  .empty-state p {
+    margin: 0;
+
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-body);
+
+    line-height: 1.5;
+  }
+
+  .empty-state-actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: var(--space-sm);
+
+    margin-top: var(--space-sm);
+  }
+
+  .cta {
+    display: inline-block;
+
+    padding: var(--space-sm) var(--space-lg);
+
+    border-radius: 4px;
+
+    font-weight: var(--font-weight-semibold);
+
+    text-decoration: none;
+  }
+
+  .cta--primary {
+    background: var(--color-accent);
+
+    color: var(--color-bg);
+  }
+
+  .cta--primary:hover {
+    background: var(--color-accent-hover);
+  }
+
+  .cta--secondary {
+    border: 1px solid var(--color-border);
+
+    color: var(--color-text);
+  }
+
+  .cta--secondary:hover {
+    border-color: var(--color-accent);
+
+    color: var(--color-accent-hover);
+  }
+</style>

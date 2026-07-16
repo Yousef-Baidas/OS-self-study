@@ -19,12 +19,16 @@
 
   --color-accent-hover: #4338ca;
 
-  /* Typography — minimal subset needed by Plan 02's nav/TOC/prev-next (UI-SPEC
-     "Typography"). Full 4-size scale (Body/Display too) lands in Plan 04 — do
-     not treat this as the final type system. */
+  /* Typography — UI-SPEC's exact 4-size scale (Label/Body/Heading/Display).
+     Plan 04 still owns the full dark-theme + font-family system; this file
+     only carries the subset each plan's concrete components need. */
   --font-size-label: 14px;
 
+  --font-size-body: 16px;
+
   --font-size-heading: 20px;
+
+  --font-size-display: 28px;
 
   --font-weight-regular: 400;
 
