@@ -1,0 +1,53 @@
+---
+number: 0
+title: "Example — Format Preview"
+slug: "example"
+summary: "A throwaway format preview exercising every layer of the chapter pipeline: heading, callout, annotated code, figure, and a hydrated island. Deleted in Phase 2."
+topics: []
+slideCount: 0
+status: "draft"
+---
+
+import Callout from '../../components/Callout.astro';
+import Figure from '../../components/Figure.astro';
+import DemoWidget from '../../widgets/example/DemoWidget.svelte';
+
+## What a chapter looks like
+
+This section exists only to prove the content pipeline works end to end — real
+Chapter 1 notes begin in Phase 2. Everything below (the callout, the annotated
+code, the figure, and the live counter) is throwaway and will be deleted
+alongside this file.
+
+<Callout type="note">
+  This is a format preview, not real course content. Callouts like this one
+  will hold definitions, key points, and warnings once real chapters exist.
+</Callout>
+
+Annotated code blocks use `astro-expressive-code`'s meta-string syntax for
+line highlights and labels — here's `fork()` creating a child process:
+
+```c {"Fork a new process:":3-4} ins={6}
+#include <unistd.h>
+
+int main() {
+  pid_t pid = fork();
+
+  if (pid == 0) {
+    printf("child\n");
+  }
+
+  return 0;
+}
+```
+
+<Figure
+  src="figures/example/example-diagram.svg"
+  alt="Diagram of the storage hierarchy: CPU registers, main memory, and disk, from fastest/smallest to slowest/largest"
+  caption="Figure 0.1 — the storage hierarchy, fastest and smallest at the top."
+/>
+
+The counter below is a real hydrated Svelte island — click it to prove
+`@astrojs/svelte` is wired up correctly on the live deploy:
+
+<DemoWidget client:visible />

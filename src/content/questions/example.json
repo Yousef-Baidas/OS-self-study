@@ -1,0 +1,14 @@
+[
+  {
+    "id": "example-001",
+    "chapter": "example",
+    "topic": "format-preview",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "This is a placeholder question validating the questions schema. Which collection does it reference?",
+    "choices": ["chapters", "questions", "widgets", "figures"],
+    "answer": 0,
+    "solution": "The `chapter` field references the `chapters` collection by slug (`example`), proving the build-time cross-collection join works.",
+    "source": "Phase 1 walking skeleton"
+  }
+]

@@ -1,0 +1,37 @@
+---
+// Minimal home page — full landing composition (D-04: hero + chapters section +
+// exam entry) is Plan 04. This just proves the base-path-safe internal link works.
+import Layout from '../components/Layout.astro';
+
+import { joinBase } from '../lib/withBase';
+
+const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/example');
+---
+
+<Layout>
+  <h1>OS-self-study</h1>
+
+  <p>Interactive CE357 Operating Systems study notes &amp; simulations.</p>
+
+  <a class="cta" href={chaptersHref}>Browse chapters</a>
+</Layout>
+
+<style>
+  .cta {
+    display: inline-block;
+
+    margin-top: var(--space-md);
+
+    padding: var(--space-sm) var(--space-lg);
+
+    border-radius: 4px;
+
+    background: var(--color-accent);
+
+    color: var(--color-bg);
+
+    font-weight: 600;
+
+    text-decoration: none;
+  }
+</style>
