@@ -1,8 +1,10 @@
 ---
 // Auto-generated chapter nav (NAV-01) — desktop persistent 260px left column,
-// filled into Layout.astro's `sidebar` slot. This component's markup is also
-// reused as the mobile drawer's content in Plan 03, so it stays self-contained
-// (its own <nav>, its own styles) rather than assuming a desktop-only shell.
+// filled into Layout.astro's `sidebar` slot. In `variant="drawer"` this same
+// component IS the mobile chapters drawer (D-14): a hand-rolled WAI-ARIA APG
+// modal dialog (RESEARCH Pattern 5) wrapping the identical chapter list, so
+// the list markup/styling/data pipeline stays single-sourced rather than a
+// second component re-deriving it.
 //
 // Sourced from getCollection('chapters') -> sortChapters (never raw collection
 // iteration order, which glob() does not guarantee matches frontmatter number).
@@ -16,11 +18,17 @@ import { joinBase } from '../lib/withBase';
 
 import BookOpen from './icons/BookOpen.astro';
 
+import Close from './icons/Close.astro';
+
 interface Props {
   currentSlug?: string;
+
+  variant?: 'sidebar' | 'drawer';
 }
 
-const { currentSlug } = Astro.props;
+const { currentSlug, variant = 'sidebar' } = Astro.props;
+
+const isDrawer = variant === 'drawer';
 
 const chapterEntries = await getCollection('chapters');
 
@@ -35,34 +43,153 @@ const chapterMetas: ChapterMeta[] = chapterEntries.map((entry) => ({
 const chapters = sortChapters(chapterMetas);
 ---
 
-<nav aria-label="Chapters" class="sidebar">
-  <div class="sidebar-heading">
-    <BookOpen width="18" height="18" />
+{
+  isDrawer ? (
+    <>
+      <div
+        id="chapter-drawer"
+        class="drawer-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chapter-drawer-title"
+        data-open="false"
+      >
+        <div class="drawer-header">
+          <h2 id="chapter-drawer-title" class="drawer-title">
+            Chapters
+          </h2>
 
-    <span>Chapters</span>
-  </div>
+          <button type="button" class="drawer-close" aria-label="Close chapter menu" data-close>
+            <Close width="20" height="20" />
+          </button>
+        </div>
 
-  <ul class="sidebar-list">
-    {
-      chapters.map((chapter) => {
+        <ul class="sidebar-list">
+          {chapters.map((chapter) => {
 
-        const isActive = chapter.slug === currentSlug;
+            const isActive = chapter.slug === currentSlug;
 
-        return (
-          <li>
-            <a
-              href={joinBase(import.meta.env.BASE_URL, `chapters/${chapter.slug}`)}
-              class:list={['sidebar-link', { 'sidebar-link--active': isActive }]}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {chapter.title}
-            </a>
-          </li>
-        );
-      })
-    }
-  </ul>
-</nav>
+            return (
+              <li>
+                <a
+                  href={joinBase(import.meta.env.BASE_URL, `chapters/${chapter.slug}`)}
+                  class:list={['sidebar-link', { 'sidebar-link--active': isActive }]}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {chapter.title}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div class="drawer-scrim" data-scrim data-open="false" />
+
+      <script>
+        // Drawer open/close + focus-trap wiring (RESEARCH Pattern 5) — a
+        // regular script, not a Svelte island, per the "no client:* outside
+        // components that need actual JS state" convention. Connects to the
+        // bottom-nav's Chapters tab purely via DOM id, so BottomNav.astro
+        // and this drawer stay decoupled (no prop/import coupling needed).
+        import { getFocusableElements, nextTrapIndex } from '../lib/focus-trap';
+
+        const drawer = document.getElementById('chapter-drawer');
+
+        const scrim = document.querySelector<HTMLElement>('[data-scrim]');
+
+        const openBtn = document.getElementById('chapters-tab');
+
+        if (drawer && scrim && openBtn) {
+
+          let lastFocused: HTMLElement | null = null;
+
+          const setOpen = (open: boolean) => {
+
+            drawer.dataset.open = open ? 'true' : 'false';
+
+            scrim.dataset.open = open ? 'true' : 'false';
+          };
+
+          const openDrawer = () => {
+
+            lastFocused = document.activeElement as HTMLElement;
+
+            setOpen(true);
+
+            getFocusableElements(drawer)[0]?.focus();
+          };
+
+          const closeDrawer = () => {
+
+            setOpen(false);
+
+            lastFocused?.focus();
+          };
+
+          drawer.addEventListener('keydown', (event) => {
+
+            if (event.key === 'Escape') {
+
+              closeDrawer();
+
+              return;
+            }
+
+            if (event.key !== 'Tab') return;
+
+            const focusable = getFocusableElements(drawer);
+
+            if (focusable.length === 0) return;
+
+            event.preventDefault();
+
+            const currentIndex = focusable.indexOf(document.activeElement as HTMLElement);
+
+            const activeIndex = currentIndex === -1 ? 0 : currentIndex;
+
+            const nextIndex = nextTrapIndex(focusable.length, activeIndex, event.shiftKey);
+
+            focusable[nextIndex]?.focus();
+          });
+
+          openBtn.addEventListener('click', openDrawer);
+
+          scrim.addEventListener('click', closeDrawer);
+
+          drawer.querySelector<HTMLElement>('[data-close]')?.addEventListener('click', closeDrawer);
+        }
+      </script>
+    </>
+  ) : (
+    <nav aria-label="Chapters" class="sidebar">
+      <div class="sidebar-heading">
+        <BookOpen width="18" height="18" />
+
+        <span>Chapters</span>
+      </div>
+
+      <ul class="sidebar-list">
+        {chapters.map((chapter) => {
+
+          const isActive = chapter.slug === currentSlug;
+
+          return (
+            <li>
+              <a
+                href={joinBase(import.meta.env.BASE_URL, `chapters/${chapter.slug}`)}
+                class:list={['sidebar-link', { 'sidebar-link--active': isActive }]}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {chapter.title}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  )
+}
 
 <style>
   .sidebar {
@@ -142,5 +269,146 @@ const chapters = sortChapters(chapterMetas);
     color: var(--color-accent);
 
     font-weight: var(--font-weight-semibold);
+  }
+
+  /* Mobile chapters drawer (D-14) — a separate class from .sidebar (not a
+     variant of it) so the desktop-only display:none/block cascade above
+     never has to be fought; the drawer's own visibility is entirely driven
+     by [data-open], not by the --bp-desktop breakpoint on itself. */
+  .drawer-panel {
+    position: fixed;
+
+    top: 0;
+
+    left: 0;
+
+    z-index: 60;
+
+    display: flex;
+
+    flex-direction: column;
+
+    width: min(85vw, 320px);
+
+    /* Progressive enhancement: dvh/svh override vh where supported so the
+       drawer never over/under-shoots iOS Safari's dynamic toolbar (Pitfall 6). */
+    height: 100vh;
+
+    height: 100svh;
+
+    height: 100dvh;
+
+    padding: var(--space-lg) var(--space-md);
+
+    background: var(--color-surface);
+
+    border-right: 1px solid var(--color-border);
+
+    overflow-y: auto;
+
+    transform: translateX(-100%);
+
+    /* visibility flips to hidden only after the close transition finishes,
+       so a closed-but-off-screen drawer is removed from the tab order and
+       the accessibility tree, not just visually hidden (Pitfall 7). */
+    visibility: hidden;
+
+    transition:
+      transform 0.25s ease,
+      visibility 0s linear 0.25s;
+  }
+
+  .drawer-panel[data-open='true'] {
+    transform: translateX(0);
+
+    visibility: visible;
+
+    transition: transform 0.25s ease;
+  }
+
+  @media (min-width: 1024px) {
+
+    .drawer-panel {
+      display: none;
+    }
+  }
+
+  .drawer-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: var(--space-md);
+  }
+
+  .drawer-title {
+    margin: 0;
+
+    color: var(--color-text);
+
+    font-size: var(--font-size-heading);
+
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .drawer-close {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 44px;
+
+    min-height: 44px;
+
+    padding: 0;
+
+    border: none;
+
+    border-radius: 4px;
+
+    background: transparent;
+
+    color: var(--color-text);
+
+    cursor: pointer;
+  }
+
+  .drawer-close:hover {
+    background: var(--color-bg);
+
+    color: var(--color-accent-hover);
+  }
+
+  .drawer-scrim {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 55;
+
+    background: rgba(15, 23, 42, 0.5);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 0.25s ease;
+  }
+
+  .drawer-scrim[data-open='true'] {
+    opacity: 1;
+
+    pointer-events: auto;
+  }
+
+  @media (min-width: 1024px) {
+
+    .drawer-scrim {
+      display: none;
+    }
   }
 </style>

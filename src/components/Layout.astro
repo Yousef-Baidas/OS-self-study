@@ -1,16 +1,25 @@
 ---
 // Page shell — locked location (D-03/UI-SPEC), inherited by every later phase.
 // Plan 02 fills the `sidebar` slot (persistent desktop nav, see the `.shell`
-// flex wrapper below); `bottom-nav` slot stays empty until Plan 03. The theme
-// toggle region is reserved but unwired until Plan 04 adds the blocking inline
-// <head> script (D-17). Do not add that script here yet.
+// flex wrapper below); Plan 03 fills `bottom-nav` with BottomNav.astro (a
+// slot default, so a page could still override it) and adds the mobile
+// chapters drawer (Sidebar's "drawer" variant) as permanent page chrome so
+// D-14 works from any page, not only chapter pages. The theme toggle region
+// is reserved but unwired until Plan 04 adds the blocking inline <head>
+// script (D-17). Do not add that script here yet.
 import '../styles/global.css';
+
+import BottomNav from './BottomNav.astro';
+
+import Sidebar from './Sidebar.astro';
 
 interface Props {
   title?: string;
+
+  currentSlug?: string;
 }
 
-const { title = 'OS-self-study' } = Astro.props;
+const { title = 'OS-self-study', currentSlug } = Astro.props;
 ---
 
 <html lang="en">
@@ -37,7 +46,11 @@ const { title = 'OS-self-study' } = Astro.props;
       </main>
     </div>
 
-    <slot name="bottom-nav" />
+    <slot name="bottom-nav">
+      <BottomNav />
+    </slot>
+
+    <Sidebar variant="drawer" currentSlug={currentSlug} />
 
     <footer class="site-footer">
       <p>OS-self-study — CE357 Operating Systems study notes.</p>

@@ -48,7 +48,7 @@ const chapterMetas: ChapterMeta[] = chapterEntries.map((chapterEntry) => ({
 const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 ---
 
-<Layout title={`${entry.data.title} — OS-self-study`}>
+<Layout title={`${entry.data.title} — OS-self-study`} currentSlug={entry.id}>
   <Sidebar slot="sidebar" currentSlug={entry.id} />
 
   <h1>{entry.data.title}</h1>

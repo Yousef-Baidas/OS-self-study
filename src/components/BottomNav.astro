@@ -1,0 +1,160 @@
+---
+// Mobile 3-tab bottom-nav (D-13/NAV-02) — fixed to the viewport bottom,
+// shown only below --bp-desktop. Home links, Chapters opens the slide-in
+// drawer (owned by Sidebar.astro's "drawer" variant — connected purely via
+// DOM ids per RESEARCH Pattern 5, not a prop/import coupling), Exam links to
+// the "coming soon" page with a muted "Soon" badge (never accent — UI-SPEC
+// Copywriting Contract keeps it from reading as an active/available
+// control). The theme toggle is intentionally NOT here (D-13); it stays in
+// the header (D-16, wired in Plan 04).
+import { joinBase } from '../lib/withBase';
+
+import Home from './icons/Home.astro';
+
+import BookOpen from './icons/BookOpen.astro';
+
+import ClipboardList from './icons/ClipboardList.astro';
+
+const homeHref = joinBase(import.meta.env.BASE_URL, '');
+
+const examHref = joinBase(import.meta.env.BASE_URL, 'exam/');
+
+const currentPath = Astro.url.pathname;
+
+const isHome = currentPath === homeHref;
+
+const isExam = currentPath.startsWith(examHref);
+---
+
+<nav aria-label="Primary" class="bottom-nav">
+  <a
+    href={homeHref}
+    class:list={['bottom-nav-tab', { 'bottom-nav-tab--active': isHome }]}
+    aria-current={isHome ? 'page' : undefined}
+  >
+    <Home width="22" height="22" />
+
+    <span class="bottom-nav-label">Home</span>
+  </a>
+
+  <button
+    type="button"
+    id="chapters-tab"
+    class="bottom-nav-tab"
+    aria-haspopup="dialog"
+    aria-controls="chapter-drawer"
+  >
+    <BookOpen width="22" height="22" />
+
+    <span class="bottom-nav-label">Chapters</span>
+  </button>
+
+  <a
+    href={examHref}
+    class:list={['bottom-nav-tab', { 'bottom-nav-tab--active': isExam }]}
+    aria-current={isExam ? 'page' : undefined}
+  >
+    <ClipboardList width="22" height="22" />
+
+    <span class="bottom-nav-label">
+      Exam
+
+      <span class="bottom-nav-badge">Soon</span>
+    </span>
+  </a>
+</nav>
+
+<style>
+  .bottom-nav {
+    position: fixed;
+
+    right: 0;
+
+    bottom: 0;
+
+    left: 0;
+
+    z-index: 50;
+
+    display: flex;
+
+    height: 56px;
+
+    background: var(--color-surface);
+
+    border-top: 1px solid var(--color-border);
+  }
+
+  @media (min-width: 1024px) {
+
+    .bottom-nav {
+      display: none;
+    }
+  }
+
+  .bottom-nav-tab {
+    display: flex;
+
+    flex: 1;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 2px;
+
+    min-width: 44px;
+
+    min-height: 44px;
+
+    padding: var(--space-xs);
+
+    border: none;
+
+    background: transparent;
+
+    color: var(--color-text-muted);
+
+    font-family: inherit;
+
+    text-decoration: none;
+
+    cursor: pointer;
+  }
+
+  .bottom-nav-tab--active {
+    color: var(--color-accent);
+  }
+
+  .bottom-nav-label {
+    display: flex;
+
+    align-items: center;
+
+    gap: var(--space-xs);
+
+    font-size: var(--font-size-label);
+
+    line-height: 1.2;
+  }
+
+  .bottom-nav-badge {
+    padding: 1px 6px;
+
+    border-radius: 999px;
+
+    background: var(--color-border);
+
+    color: var(--color-text-muted);
+
+    font-size: 10px;
+
+    font-weight: var(--font-weight-semibold);
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.02em;
+  }
+</style>
