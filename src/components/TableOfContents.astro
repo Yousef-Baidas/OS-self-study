@@ -1,0 +1,124 @@
+---
+// Collapsible "On this page" bar under the chapter H1 (D-15). Build-time
+// heading extraction (NAV-03) + a zero-island progressive-enhancement toggle
+// (native <details>, NOT a Svelte island — Architectural Responsibility Map).
+// Anchor ids come straight from Astro's own MDX/remark pipeline via render()'s
+// `headings` array — never hand-roll a slugify function, or ids won't match
+// what the rendered heading actually got (NAV-06 requires an exact match).
+import ChevronDown from './icons/ChevronDown.astro';
+
+interface Heading {
+  depth: number;
+
+  slug: string;
+
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+// Only H2/H3 sections belong in the TOC — H1 is the page title itself, and
+// H4+ would be noise in a short study-notes page.
+const sectionHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{
+  sectionHeadings.length > 0 && (
+    <details class="toc">
+      <summary class="toc-summary">
+        <span>On this page</span>
+
+        <ChevronDown class="toc-chevron" width="18" height="18" />
+      </summary>
+
+      <ul class="toc-list">
+        {sectionHeadings.map((heading) => (
+          <li class:list={['toc-item', `toc-item--depth-${heading.depth}`]}>
+            <a href={`#${heading.slug}`}>{heading.text}</a>
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+}
+
+<style>
+  .toc {
+    margin: var(--space-lg) 0;
+
+    border: 1px solid var(--color-border);
+
+    border-radius: 4px;
+
+    background: var(--color-surface);
+  }
+
+  .toc-summary {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: var(--space-sm) var(--space-md);
+
+    color: var(--color-text);
+
+    font-size: var(--font-size-label);
+
+    font-weight: var(--font-weight-semibold);
+
+    cursor: pointer;
+
+    list-style: none;
+  }
+
+  /* Hide the default disclosure triangle so the hand-rolled chevron is the
+     only expand/collapse indicator (cross-browser: Chrome/Safari use the
+     ::-webkit- marker, Firefox honors list-style: none on the summary). */
+  .toc-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .toc-chevron {
+    flex-shrink: 0;
+
+    transition: transform 0.15s ease;
+  }
+
+  .toc[open] .toc-chevron {
+    transform: rotate(180deg);
+  }
+
+  .toc-list {
+    margin: 0;
+
+    padding: 0 var(--space-md) var(--space-sm);
+
+    list-style: none;
+  }
+
+  .toc-item {
+    padding: var(--space-xs) 0;
+  }
+
+  .toc-item--depth-3 {
+    padding-left: var(--space-md);
+  }
+
+  .toc-list a {
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-label);
+
+    text-decoration: none;
+  }
+
+  .toc-list a:hover {
+    color: var(--color-accent-hover);
+  }
+</style>

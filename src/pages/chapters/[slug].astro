@@ -8,6 +8,8 @@ import Layout from '../../components/Layout.astro';
 
 import Sidebar from '../../components/Sidebar.astro';
 
+import TableOfContents from '../../components/TableOfContents.astro';
+
 import ChevronLeft from '../../components/icons/ChevronLeft.astro';
 
 import ChevronRight from '../../components/icons/ChevronRight.astro';
@@ -29,7 +31,7 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 
 // Recomputed independently of getStaticPaths (Astro does not carry that
 // function's locals into the page body) — same pattern Sidebar.astro uses.
@@ -59,6 +61,8 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
       </p>
     )
   }
+
+  <TableOfContents headings={headings} />
 
   <Content />
 
