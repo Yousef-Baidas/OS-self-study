@@ -71,77 +71,6 @@
       activeIndex = index;
     }
   }
-
-  function onRowKeydown(event: KeyboardEvent, index: number) {
-
-    // Native <button> already activates on Enter/Space via `click`; this
-    // only exists so Space doesn't also scroll the page (default button
-    // behavior already prevents that, kept here for clarity/parity with
-    // the SimFrame control row's own keyboard handling).
-    if (event.key === 'Enter' || event.key === ' ') {
-
-      selectTier(index);
-    }
-  }
-
-  // Qualitative Speed/Size labels, positionally matched to `storageTiers`
-  // and derived from the slide-16 diagram's own axis directions (faster/
-  // smaller upward, slower/larger downward) plus each tier's storage-class
-  // bracket — no numeric value anywhere (D-02/D-03, RESEARCH Pitfall 2).
-  const speedLabels = [
-
-    'Fastest of all seven tiers',
-
-    'Faster than main memory, slower than registers',
-
-    'Faster than secondary storage, slower than cache',
-
-    'Slower than main memory, faster than hard-disk drives',
-
-    'Slower than nonvolatile memory, faster than optical disks',
-
-    'Slower than hard-disk drives, faster than magnetic tapes',
-
-    'Slowest of all seven tiers',
-  ];
-
-  const sizeLabels = [
-
-    'Smallest capacity of all seven tiers',
-
-    'Larger than registers, smaller than main memory',
-
-    'Larger than cache, smaller than secondary storage',
-
-    'Larger than main memory, smaller than hard-disk drives',
-
-    'Larger than nonvolatile memory, smaller than optical disks',
-
-    'Larger than hard-disk drives, smaller than magnetic tapes',
-
-    'Largest capacity of all seven tiers',
-  ];
-
-  // Cost has no slide value anywhere in the deck (RESEARCH Open Question
-  // 1) — populated as the standard inverse-of-speed corollary and always
-  // suffixed with an explicit [ASSUMED] marker so a reader never mistakes
-  // it for slide-sourced fact (D-02/D-03, threat T-02-05).
-  const costLabels = [
-
-    'Costliest per byte [ASSUMED]',
-
-    'Costlier than main memory, cheaper than registers [ASSUMED]',
-
-    'Costlier than secondary storage, cheaper than cache [ASSUMED]',
-
-    'Cheaper than main memory, costlier than hard-disk drives [ASSUMED]',
-
-    'Cheaper than nonvolatile memory, costlier than optical disks [ASSUMED]',
-
-    'Cheaper than hard-disk drives, costlier than magnetic tapes [ASSUMED]',
-
-    'Cheapest per byte [ASSUMED]',
-  ];
 </script>
 
 <SimFrame
@@ -168,7 +97,6 @@
           aria-pressed={selected}
           aria-label={`${tier.name}${selected ? ', selected' : ''}`}
           onclick={() => selectTier(index)}
-          onkeydown={(event) => onRowKeydown(event, index)}
         >
           {tier.name}
         </button>
@@ -178,19 +106,19 @@
             <div class="storage-hierarchy__stat">
               <p class="eyebrow">Speed</p>
 
-              <p class="storage-hierarchy__stat-value">{speedLabels[index]}</p>
+              <p class="storage-hierarchy__stat-value">{tier.speed}</p>
             </div>
 
             <div class="storage-hierarchy__stat">
               <p class="eyebrow">Size</p>
 
-              <p class="storage-hierarchy__stat-value">{sizeLabels[index]}</p>
+              <p class="storage-hierarchy__stat-value">{tier.size}</p>
             </div>
 
             <div class="storage-hierarchy__stat">
               <p class="eyebrow">Cost</p>
 
-              <p class="storage-hierarchy__stat-value">{costLabels[index]}</p>
+              <p class="storage-hierarchy__stat-value">{tier.cost}</p>
             </div>
 
             <div class="storage-hierarchy__stat">
