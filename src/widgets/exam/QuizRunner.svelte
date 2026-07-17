@@ -596,6 +596,10 @@
     gap: var(--space-xs);
 
     flex: 1 1 160px;
+
+    /* Allow the field to shrink below the <select>'s intrinsic (longest-option)
+       width — without this, long topic labels overflow the card on mobile. */
+    min-width: 0;
   }
 
   .field__label {
@@ -613,6 +617,10 @@
   }
 
   .select {
+    width: 100%;
+
+    max-width: 100%;
+
     height: 44px;
 
     padding: 0 var(--space-md);

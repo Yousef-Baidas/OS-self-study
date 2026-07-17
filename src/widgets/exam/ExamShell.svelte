@@ -91,6 +91,8 @@
     flex-direction: column;
 
     gap: var(--space-xs);
+
+    min-width: 0;
   }
 
   .exam-shell__label {
@@ -108,6 +110,10 @@
   }
 
   .exam-shell__select {
+    width: 100%;
+
+    max-width: 100%;
+
     height: 48px;
 
     padding: 0 var(--space-md);
