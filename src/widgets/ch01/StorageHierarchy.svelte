@@ -102,7 +102,7 @@
         </button>
 
         {#if selected}
-          <div class="storage-hierarchy__detail" style={`width: ${widthPercent}%;`}>
+          <div class="storage-hierarchy__detail">
             <div class="storage-hierarchy__stat">
               <p class="eyebrow">Speed</p>
 
@@ -163,7 +163,7 @@
 
     min-height: 44px;
 
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--space-sm);
 
     border: 1px solid var(--color-border);
 
@@ -177,7 +177,13 @@
 
     font-weight: var(--font-weight-regular);
 
-    line-height: var(--line-height-relaxed);
+    line-height: var(--line-height-snug);
+
+    text-align: center;
+
+    /* Narrow top-of-pyramid tiers must never spill their label on small
+       phones — break the word rather than overflow the box. */
+    overflow-wrap: break-word;
 
     cursor: pointer;
   }
@@ -203,16 +209,21 @@
     font-weight: var(--font-weight-semibold);
   }
 
+  /* The detail panel is an info card — it must span the full widget width, not
+     inherit the selected tier's pyramid width (which crushes the 4-stat grid to
+     an unreadable sliver for the narrow top tiers on mobile). */
   .storage-hierarchy__detail {
+    width: 100%;
+
     display: grid;
 
     grid-template-columns: 1fr 1fr;
 
-    gap: var(--space-sm);
+    gap: var(--space-sm) var(--space-md);
 
     margin-top: var(--space-xs);
 
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--space-md);
 
     border: 1px solid var(--color-border);
 
@@ -221,13 +232,19 @@
     background: var(--color-surface);
   }
 
+  .storage-hierarchy__detail .eyebrow {
+    margin-bottom: var(--space-xs);
+  }
+
   .storage-hierarchy__stat-value {
     margin: 0;
 
-    font-size: var(--font-size-body);
+    font-size: var(--font-size-label);
 
-    line-height: var(--line-height-relaxed);
+    line-height: var(--line-height-snug);
 
     color: var(--color-text);
+
+    overflow-wrap: break-word;
   }
 </style>
