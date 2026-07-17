@@ -19,12 +19,22 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   prose into scannable lecture notes: section `<Lead>` essences, comparison tables for every
   distinction, bold key terms, inline `<SlideRef>` citations mapped from `CONTENT/slides/OS_chapter1.pptx`.
   Two sims (`StorageHierarchy`, `InterruptCycle`) + four redrawn inline theme-aware figures.
+- **Chapter 2 (Operating-System Structures)** — complete, live at `/chapters/operating-system-structures`.
+  Eight sections (services, UI/CLI/GUI, system calls, `fork`/`exec`/`wait`, system programs, OS
+  structure, boot, debugging) in the same lecture-notes pattern, mapped from `OS_chapter2.pptx` (57
+  slides). Three sims in `src/widgets/ch02/`: `CategorySorter` (services + syscall-category self-quiz,
+  reused twice via a `dataset` prop), `OsStructureExplorer` (segmented control across all five
+  structures with three render modes), `SyscallJourney` (SimFrame stepper flipping the mode bit
+  through fork→exec→wait). Two inline figures (`services-view`, `syscall-parameter-passing`).
 - **Design system** — elevated to a "shadcn look" on the existing token stack (no Tailwind). Notes
   components: `SlideRef.astro` (citation pill), `Lead.astro` (section essence). Comparison-table,
   definition-list, and figure (`.fg-*`) styling in `src/styles/global.css`, scoped to `.chapter-prose`.
-- **Exam mode** — live at `/exam`. `QuizRunner.svelte` island: filter by topic/difficulty → answer
+- **Exam mode** — live at `/exam`, now **multi-chapter**. `ExamShell.svelte` wraps the per-chapter
+  `QuizRunner.svelte` engine with a chapter switcher (a native `<select>`); picking a chapter
+  remounts the runner via `{#key}` so its `onMount` re-reads that chapter's own localStorage
+  (progress + last score stay per-chapter). Each runner: filter by topic/difficulty → answer
   mcq / true-false / numeric / short → instant feedback with worked solution + slide citation →
-  score + review-your-misses → resumable via localStorage. Seeded with 20 Chapter-1 questions.
+  score + review-your-misses → resumable. 20 Chapter-1 + 22 Chapter-2 questions.
 - **Deployed** — live on GitHub Pages at <https://yousef-baidas.github.io/OS-self-study/>.
   `main` is now the trunk/deploy branch (fast-forwarded from `foundation`); push to `main` → auto-deploy.
 
@@ -37,7 +47,7 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
 | Figures (inline SVG) | `src/assets/figures/<ch>/*.svg` |
 | Sims (per chapter) | `src/widgets/<ch>/*.svelte` |
 | Exam questions | `src/content/questions/<ch>.json` (schema in `src/content.config.ts`) |
-| Exam engine | `src/widgets/exam/QuizRunner.svelte`, page `src/pages/exam/index.astro` |
+| Exam engine | `src/widgets/exam/{ExamShell,QuizRunner}.svelte`, page `src/pages/exam/index.astro` |
 | Design tokens / globals | `src/styles/tokens.css`, `src/styles/global.css` |
 | Source slides / review PDFs | `CONTENT/slides/OS_chapterN.pptx`, `CONTENT/*.pdf` |
 
@@ -51,10 +61,11 @@ hard-refresh to beat the Pages cache after a deploy.
 
 ## Next up
 
-1. **Chapters 2–10 content** — all decks are in `CONTENT/slides/`. Reuse the Chapter-1 pattern
+1. **Chapters 3–10 content** — all decks are in `CONTENT/slides/`. Reuse the Chapter-1/2 pattern
    (Lead + tables + SlideRef + figures + sims). Extract per-slide text for accurate citations:
-   `python3` unzip of the `.pptx` (see the pattern used for Ch1).
-2. **Exam bank per chapter** — add `src/content/questions/chNN.json` as each chapter lands.
+   `python3` unzip of the `.pptx` (see the pattern used for Ch1/Ch2).
+2. **Exam bank per chapter** — add `src/content/questions/chNN.json`; the exam page auto-groups it
+   into the `ExamShell` chapter switcher (no page change needed — it globs all chapters).
 3. **Exam UX later** — cross-chapter mixed sets, timed mode, per-topic accuracy history.
 
 ## Gotchas / decisions
