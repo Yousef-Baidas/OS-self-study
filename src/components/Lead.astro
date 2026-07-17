@@ -1,0 +1,54 @@
+---
+// Section lead — the one-line essence that opens each chapter section, styled
+// distinctly from body prose so a reader gets the gist before the details.
+// Optionally carries the section's slide range as a trailing citation pill so
+// the essence and its source sit on one row. Keep the text to a single sentence.
+//
+// Usage:
+//   <Lead>Just the essence, no citation.</Lead>
+//   <Lead from={16} to={20}>Storage is layered by speed, cost, volatility.</Lead>
+//   <Lead n={12}>A modern computer is CPUs + controllers on a shared bus.</Lead>
+import SlideRef from './SlideRef.astro';
+
+interface Props {
+  n?: number;
+
+  from?: number;
+
+  to?: number;
+}
+
+const { n, from, to } = Astro.props;
+
+const hasRef = n != null || (from != null && to != null);
+---
+
+<p class="lead">
+  <slot />
+
+  {hasRef && <SlideRef n={n} from={from} to={to} />}
+</p>
+
+<style>
+  .lead {
+    margin: 0 0 var(--space-md);
+
+    max-width: 68ch;
+
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-lead);
+
+    line-height: var(--line-height-snug);
+
+    text-wrap: pretty;
+  }
+
+  /* Bolded terms inside a lead still read as muted — the lead is context, not
+     the place to spend emphasis. */
+  .lead :global(strong) {
+    color: var(--color-text);
+
+    font-weight: var(--font-weight-semibold);
+  }
+</style>

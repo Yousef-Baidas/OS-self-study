@@ -1,46 +1,97 @@
 ---
-// Base-path-safe captioned figure (PLAT-03, D-08). Every internal asset path
-// MUST go through joinBase — a hardcoded absolute src 404s on the live
-// /OS-self-study/ GitHub Pages base path even though it works in local dev.
+// Captioned figure. Local SVGs are INLINED into the page DOM so they inherit the
+// design tokens and follow the site's light/dark toggle — an <img>-referenced SVG
+// is isolated and can only see the OS color scheme, not [data-theme]. Non-SVG
+// assets (or any SVG not found under src/assets) fall back to a base-path-safe
+// <img>; a hardcoded absolute src would 404 on the /OS-self-study/ Pages base.
 import { joinBase } from '../lib/withBase';
 
 interface Props {
   src: string;
+
   alt: string;
+
   caption: string;
 }
 
 const { src, alt, caption } = Astro.props;
 
+// Eager raw-import every figure SVG so the right one can be inlined by set:html.
+const svgModules = import.meta.glob('/src/assets/figures/**/*.svg', {
+  query: '?raw',
+
+  import: 'default',
+
+  eager: true,
+});
+
+const inlineSvg = svgModules[`/src/assets/${src}`] as string | undefined;
+
 const url = joinBase(import.meta.env.BASE_URL, src);
 ---
 
-<figure>
-  <img src={url} alt={alt} />
+<figure class="figure">
+  {
+    inlineSvg ? (
+      <div class="figure__svg" role="img" aria-label={alt} set:html={inlineSvg} />
+    ) : (
+      <img src={url} alt={alt} />
+    )
+  }
 
   <figcaption>{caption}</figcaption>
 </figure>
 
 <style>
-  figure {
-    margin: var(--space-lg) 0;
+  .figure {
+    margin: var(--space-xl) 0;
   }
 
-  img {
+  .figure__svg,
+  .figure img {
+    display: block;
+
     max-width: 100%;
 
-    display: block;
+    margin: 0 auto;
+
+    background: var(--color-surface);
 
     border: 1px solid var(--color-border);
 
-    border-radius: 4px;
+    border-radius: var(--radius-md);
+
+    box-shadow: var(--shadow-sm);
+  }
+
+  .figure__svg {
+    padding: var(--space-lg);
+  }
+
+  /* The raw-injected <svg> carries no scope attribute, so reach it with :global. */
+  .figure__svg :global(svg) {
+    display: block;
+
+    width: 100%;
+
+    height: auto;
+  }
+
+  .figure img {
+    padding: var(--space-md);
   }
 
   figcaption {
-    margin-top: var(--space-xs);
+    margin-top: var(--space-sm);
 
     color: var(--color-text-muted);
 
-    font-size: 14px;
+    font-size: var(--font-size-label);
+
+    line-height: var(--line-height-snug);
+
+    text-align: center;
+
+    text-wrap: pretty;
   }
 </style>

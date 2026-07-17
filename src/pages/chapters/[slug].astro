@@ -51,7 +51,13 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 <Layout title={`${entry.data.title} — OS-self-study`} currentSlug={entry.id}>
   <Sidebar slot="sidebar" currentSlug={entry.id} />
 
+  <p class="eyebrow chapter-eyebrow">
+    Chapter {entry.data.number} · {entry.data.slideCount} slides
+  </p>
+
   <h1>{entry.data.title}</h1>
+
+  <p class="chapter-summary">{entry.data.summary}</p>
 
   {
     entry.data.status === 'draft' && (
@@ -64,7 +70,9 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 
   <TableOfContents headings={headings} />
 
-  <Content />
+  <div class="chapter-prose">
+    <Content />
+  </div>
 
   <nav class="chapter-nav" aria-label="Chapter navigation">
     {
@@ -123,6 +131,24 @@ const { prev, next } = getAdjacentChapters(chapterMetas, entry.id);
 </Layout>
 
 <style>
+  .chapter-eyebrow {
+    margin-bottom: var(--space-sm);
+  }
+
+  .chapter-summary {
+    margin: 0 0 var(--space-lg);
+
+    max-width: 68ch;
+
+    color: var(--color-text-muted);
+
+    font-size: var(--font-size-lead);
+
+    line-height: var(--line-height-snug);
+
+    text-wrap: pretty;
+  }
+
   .preview-note {
     display: flex;
 

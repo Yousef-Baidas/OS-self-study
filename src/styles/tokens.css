@@ -55,6 +55,15 @@
 
   --font-size-display: 28px;
 
+  /* Notes-layout additions: a lead line for each section's essence, and larger
+     desktop heading sizes so chapter pages read like real lecture notes, not a
+     cramped mobile column. Applied at the desktop breakpoint in global.css. */
+  --font-size-lead: 18px;
+
+  --font-size-heading-lg: 23px;
+
+  --font-size-display-lg: 34px;
+
   --line-height-tight: 1.2;
 
   --line-height-snug: 1.35;

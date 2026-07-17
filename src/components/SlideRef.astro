@@ -1,0 +1,96 @@
+---
+// Slide citation pill — points the student at the exact source slide(s) in their
+// own copy of the chapter deck. Reference-only (the deck isn't hosted, and there
+// is no LibreOffice in this environment to rasterize slides), so it is a quiet
+// non-interactive marker, not a link.
+//
+// Usage:
+//   <SlideRef n={16} />           -> "slide 16"
+//   <SlideRef from={29} to={32} /> -> "slides 29–32"
+interface Props {
+  n?: number;
+
+  from?: number;
+
+  to?: number;
+
+  chapter?: number;
+}
+
+const { n, from, to, chapter = 1 } = Astro.props;
+
+const isRange = from != null && to != null;
+
+const label = isRange ? `slides ${from}–${to}` : `slide ${n}`;
+
+const aria = `Source: Chapter ${chapter}, ${label}`;
+---
+
+<span class="slide-ref" title={aria} aria-label={aria}>
+  <svg
+    class="slide-ref__icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2 3h20"></path>
+
+    <path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"></path>
+
+    <path d="m7 21 5-5 5 5"></path>
+  </svg>
+
+  <span class="slide-ref__text">{label}</span>
+</span>
+
+<style>
+  .slide-ref {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 0.32em;
+
+    vertical-align: baseline;
+
+    translate: 0 0.06em;
+
+    padding: 0.08em 0.5em 0.08em 0.42em;
+
+    border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+
+    border-radius: var(--radius-sm);
+
+    background: var(--color-accent-wash);
+
+    color: var(--color-accent);
+
+    font-family: var(--font-mono);
+
+    font-size: var(--font-size-micro);
+
+    font-weight: var(--font-weight-semibold);
+
+    line-height: 1.35;
+
+    letter-spacing: 0.01em;
+
+    white-space: nowrap;
+
+    cursor: help;
+  }
+
+  .slide-ref__icon {
+    width: 12px;
+
+    height: 12px;
+
+    flex: none;
+
+    opacity: 0.85;
+  }
+</style>

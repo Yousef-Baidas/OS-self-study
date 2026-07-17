@@ -1,0 +1,50 @@
+<svg viewBox="0 0 580 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- A system call traps from user mode into kernel mode (mode bit -> 0), the
+       kernel runs the call, then returns to user mode (mode bit -> 1). -->
+  <defs>
+    <marker id="arw-mode" markerWidth="12" markerHeight="12" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,3.5 L0,7 Z" class="fg-arrow" />
+    </marker>
+  </defs>
+
+  <!-- mode-boundary + lane chips -->
+  <line x1="24" y1="150" x2="556" y2="150" class="fg-line" stroke-dasharray="5 6" />
+
+  <rect x="24" y="22" width="104" height="22" rx="11" class="fg-node" />
+
+  <text x="76" y="37" text-anchor="middle" class="fg-mono" font-size="10.5" fill="var(--color-text-muted)">USER MODE</text>
+
+  <rect x="24" y="256" width="118" height="22" rx="11" class="fg-node-accent" />
+
+  <text x="83" y="271" text-anchor="middle" class="fg-mono" font-size="10.5" fill="var(--color-text)">KERNEL MODE</text>
+
+  <!-- user-mode nodes -->
+  <rect x="54" y="58" width="176" height="56" rx="10" class="fg-node" />
+
+  <text x="142" y="91" text-anchor="middle" class="fg-text" font-size="14">User process runs</text>
+
+  <rect x="350" y="58" width="176" height="56" rx="10" class="fg-node" />
+
+  <text x="438" y="91" text-anchor="middle" class="fg-text" font-size="14">User process resumes</text>
+
+  <!-- kernel-mode node -->
+  <rect x="196" y="186" width="188" height="56" rx="10" class="fg-node-accent" />
+
+  <text x="290" y="209" text-anchor="middle" class="fg-text" font-size="14">Kernel runs the</text>
+
+  <text x="290" y="227" text-anchor="middle" class="fg-text" font-size="14">system call</text>
+
+  <!-- trap down into kernel -->
+  <path d="M150 114 C 150 150, 190 165, 236 186" class="fg-line" marker-end="url(#arw-mode)" />
+
+  <text x="112" y="146" text-anchor="middle" class="fg-text" font-size="11.5">system call (trap)</text>
+
+  <text x="112" y="162" text-anchor="middle" class="fg-mono" font-size="10.5" fill="var(--color-text-muted)">mode bit → 0</text>
+
+  <!-- return up to user -->
+  <path d="M344 186 C 390 165, 430 150, 430 114" class="fg-line" marker-end="url(#arw-mode)" />
+
+  <text x="474" y="146" text-anchor="middle" class="fg-text" font-size="11.5">return</text>
+
+  <text x="474" y="162" text-anchor="middle" class="fg-mono" font-size="10.5" fill="var(--color-text-muted)">mode bit → 1</text>
+</svg>

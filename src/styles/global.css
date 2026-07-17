@@ -192,3 +192,236 @@ hr {
 
   scrollbar-width: thin;
 }
+
+/* ── Chapter notes layout ──────────────────────────────────────────────────
+   Everything below shapes the "lecture notes" reading experience and is scoped
+   to the .chapter-prose wrapper (added around <Content /> in [slug].astro) so it
+   never bleeds into the Svelte sim islands that also live inside <main>.
+   All values reference tokens; nothing here ships JS. */
+
+/* More confident headings on desktop so notes don't read as a cramped column. */
+@media (min-width: 1024px) {
+  main h1 {
+    font-size: var(--font-size-display-lg);
+  }
+
+  .chapter-prose h2 {
+    font-size: var(--font-size-heading-lg);
+  }
+}
+
+/* Key terms: full text color, a touch heavier — the eye lands on them first. */
+.chapter-prose :where(p, li, dd, td) strong {
+  color: var(--color-text);
+
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Scannable bullets — a small rounded-square marker in the accent (systems motif)
+   instead of a generic disc. */
+.chapter-prose ul {
+  list-style: none;
+
+  margin: 0 0 var(--space-md);
+
+  padding: 0;
+}
+
+.chapter-prose ul > li {
+  position: relative;
+
+  max-width: 68ch;
+
+  padding-left: var(--space-lg);
+
+  margin-bottom: var(--space-sm);
+}
+
+.chapter-prose ul > li::before {
+  content: '';
+
+  position: absolute;
+
+  left: 3px;
+
+  top: 0.62em;
+
+  width: 6px;
+
+  height: 6px;
+
+  border-radius: 2px;
+
+  background: var(--color-accent);
+}
+
+/* Comparison tables — the workhorse of the notes format. Framed, scannable, and
+   self-scrolling on mobile (display:block + max-content) so a wide table never
+   forces the whole page to scroll sideways. */
+.chapter-prose table {
+  display: block;
+
+  width: max-content;
+
+  max-width: 100%;
+
+  margin: var(--space-lg) 0;
+
+  overflow-x: auto;
+
+  border: 1px solid var(--color-border);
+
+  border-radius: var(--radius-md);
+
+  border-collapse: collapse;
+
+  font-size: var(--font-size-label);
+
+  line-height: var(--line-height-snug);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.chapter-prose th,
+.chapter-prose td {
+  padding: var(--space-sm) var(--space-md);
+
+  border-bottom: 1px solid var(--color-border);
+
+  border-right: 1px solid var(--color-border);
+
+  text-align: left;
+
+  vertical-align: top;
+}
+
+.chapter-prose thead th {
+  background: var(--color-surface);
+
+  color: var(--color-text);
+
+  font-weight: var(--font-weight-semibold);
+
+  white-space: nowrap;
+}
+
+.chapter-prose tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.chapter-prose th:last-child,
+.chapter-prose td:last-child {
+  border-right: none;
+}
+
+/* First column of a comparison table is the dimension label — quiet emphasis. */
+.chapter-prose tbody td:first-child {
+  font-weight: var(--font-weight-semibold);
+
+  color: var(--color-text);
+}
+
+/* Definition lists — for broken-out term/definition pairs authored as raw HTML. */
+.chapter-prose dl {
+  margin: var(--space-lg) 0;
+
+  border-left: 2px solid var(--color-border);
+
+  padding-left: var(--space-md);
+}
+
+.chapter-prose dt {
+  margin-top: var(--space-sm);
+
+  color: var(--color-text);
+
+  font-weight: var(--font-weight-semibold);
+}
+
+.chapter-prose dd {
+  margin: var(--space-xs) 0 0;
+
+  max-width: 68ch;
+
+  color: var(--color-text);
+}
+
+/* ── Inline figure diagrams ────────────────────────────────────────────────
+   Shared visual vocabulary for the hand-drawn chapter SVGs. Because the SVGs are
+   inlined into the page (Figure.astro), these classes let every diagram track the
+   design tokens and the light/dark toggle instead of baking in a static palette. */
+.fg-node {
+  fill: var(--color-surface-raised);
+
+  stroke: var(--color-border);
+
+  stroke-width: 1.5;
+}
+
+.fg-node-strong {
+  fill: var(--color-surface);
+
+  stroke: var(--color-text-muted);
+
+  stroke-width: 1.5;
+}
+
+.fg-node-accent {
+  fill: var(--color-accent-wash-strong);
+
+  stroke: var(--color-accent);
+
+  stroke-width: 1.5;
+}
+
+.fg-bus {
+  fill: var(--color-accent-wash-strong);
+
+  stroke: var(--color-accent);
+
+  stroke-width: 1.5;
+}
+
+.fg-panel {
+  fill: var(--color-surface);
+
+  stroke: var(--color-border);
+
+  stroke-width: 1;
+}
+
+.fg-line {
+  stroke: var(--color-text-muted);
+
+  stroke-width: 2;
+
+  fill: none;
+}
+
+.fg-arrow {
+  fill: var(--color-text-muted);
+}
+
+.fg-text {
+  fill: var(--color-text);
+
+  font-family: var(--font-sans);
+
+  font-weight: 600;
+}
+
+.fg-text-muted {
+  fill: var(--color-text-muted);
+
+  font-family: var(--font-sans);
+
+  font-weight: 400;
+}
+
+.fg-mono {
+  font-family: var(--font-mono);
+
+  font-weight: 600;
+
+  letter-spacing: 0.04em;
+}
