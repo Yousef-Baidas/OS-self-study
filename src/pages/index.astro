@@ -32,6 +32,8 @@ const browseHref = firstChapter
 
 const examHref = joinBase(import.meta.env.BASE_URL, 'exam');
 
+const questionCount = (await getCollection('questions')).length;
+
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
@@ -124,10 +126,25 @@ const pad = (n: number) => String(n).padStart(2, '0');
       <span class="exam-card__text">
         <span class="eyebrow">Exam mode</span>
 
-        <span class="exam-card__title">Practice questions &amp; timed exams</span>
+        <span class="exam-card__title">Practice questions with worked solutions</span>
+
+        <span class="exam-card__meta">{questionCount} questions · instant feedback · resumable</span>
       </span>
 
-      <span class="soon-badge">Soon</span>
+      <svg
+        class="card__arrow"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M5 12h14M13 6l6 6-6 6"></path>
+      </svg>
     </a>
   </section>
 </Layout>
@@ -377,21 +394,28 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
     padding: var(--space-md) var(--space-lg);
 
-    border: 1px dashed var(--color-border);
+    border: 1px solid var(--color-border);
 
     border-radius: var(--radius-md);
 
-    background: transparent;
+    background: var(--color-surface-raised);
 
     color: var(--color-text);
 
     text-decoration: none;
 
-    transition: border-color 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
   .exam-card:hover {
-    border-color: color-mix(in srgb, var(--color-text) 30%, var(--color-border));
+    transform: translateY(-2px);
+
+    border-color: color-mix(in srgb, var(--color-text) 35%, var(--color-border));
+
+    box-shadow: var(--shadow-md);
   }
 
   .exam-card__text {
@@ -403,27 +427,25 @@ const pad = (n: number) => String(n).padStart(2, '0');
   }
 
   .exam-card__title {
-    color: var(--color-text-muted);
+    font-weight: var(--font-weight-semibold);
   }
 
-  .soon-badge {
+  .exam-card__meta {
+    margin-top: var(--space-xs);
+
     font-family: var(--font-mono);
 
     font-size: var(--font-size-micro);
 
-    font-weight: var(--font-weight-semibold);
-
-    letter-spacing: var(--tracking-caps);
-
-    text-transform: uppercase;
+    letter-spacing: 0.03em;
 
     color: var(--color-text-muted);
+  }
 
-    padding: var(--space-xs) var(--space-sm);
+  .exam-card:hover .card__arrow {
+    color: var(--color-text);
 
-    border: 1px solid var(--color-border);
-
-    border-radius: 999px;
+    transform: translateX(3px);
   }
 
   /* ---- Staggered load-in (disabled under prefers-reduced-motion via tokens.css) ---- */

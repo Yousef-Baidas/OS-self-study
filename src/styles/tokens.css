@@ -22,6 +22,13 @@
 
   --color-destructive: #dc2626;
 
+  --color-success: #16a34a;
+
+  /* Feedback washes — used by exam mode for correct / incorrect answer states. */
+  --color-success-wash: color-mix(in srgb, var(--color-success) 12%, var(--color-bg));
+
+  --color-destructive-wash: color-mix(in srgb, var(--color-destructive) 10%, var(--color-bg));
+
   /* Derived surface tints — accent washes used for active states / callouts.
      color-mix keeps them locked to the accent hue so a token change cascades. */
   --color-accent-wash: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg));
@@ -126,6 +133,12 @@
   --color-accent-hover: #818cf8;
 
   --color-destructive: #f87171;
+
+  --color-success: #4ade80;
+
+  --color-success-wash: color-mix(in srgb, var(--color-success) 16%, var(--color-bg));
+
+  --color-destructive-wash: color-mix(in srgb, var(--color-destructive) 16%, var(--color-bg));
 
   --color-accent-wash: color-mix(in srgb, var(--color-accent) 16%, var(--color-bg));
 

@@ -1,29 +1,73 @@
 ---
-// Exam "coming soon" page (D-06) — a real page, not a dead link, so the
-// Home/Chapters/Exam information architecture is locked before the exam
-// engine exists (Phase 3) and the nav shape never shifts under visitors.
-// Styled as an intentional empty state (D-01), never a broken placeholder.
+// Exam mode (D-06). Loads the Chapter 1 question bank from the `questions`
+// collection and hands it to the QuizRunner island. client:only="svelte" because
+// the runner reads/writes localStorage (resume + last score) — server-rendering a
+// progress UI that can only be correct on the client would flash wrong content.
 import Layout from '../../components/Layout.astro';
+
+import QuizRunner from '../../widgets/exam/QuizRunner.svelte';
+
+import { getCollection } from 'astro:content';
 
 import { joinBase } from '../../lib/withBase';
 
-const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/example');
+const CHAPTER = 'introduction';
+
+const all = await getCollection('questions');
+
+// Filter to this chapter and strip the collection reference — the island only
+// needs the plain question fields, serialized across the island boundary.
+const questions = all
+  .filter((entry) => entry.data.chapter.id === CHAPTER)
+  .map((entry) => ({
+    id: entry.data.id,
+
+    topic: entry.data.topic,
+
+    type: entry.data.type,
+
+    difficulty: entry.data.difficulty,
+
+    prompt: entry.data.prompt,
+
+    choices: entry.data.choices ?? null,
+
+    answer: entry.data.answer,
+
+    solution: entry.data.solution,
+
+    source: entry.data.source,
+  }))
+  .sort((a, b) => a.id.localeCompare(b.id));
+
+const chaptersHref = joinBase(import.meta.env.BASE_URL, `chapters/${CHAPTER}`);
 ---
 
-<Layout title="Exam — OS-self-study">
-  <div class="empty-state">
-    <h1>Exam mode is coming soon</h1>
+<Layout title="Exam mode — OS-self-study">
+  <div class="exam-page">
+    {
+      questions.length > 0 ? (
+        <QuizRunner client:only="svelte" questions={questions} chapter={CHAPTER} />
+      ) : (
+        <div class="empty-state">
+          <h1>No questions yet</h1>
 
-    <p>
-      Practice questions and timed exams unlock once Chapter 1 is complete. Browse the chapters in
-      the meantime.
-    </p>
+          <p>
+            The exam bank fills up as each chapter lands. Browse the chapters in the meantime.
+          </p>
 
-    <a class="cta" href={chaptersHref}>Browse chapters</a>
+          <a class="cta" href={chaptersHref}>Browse chapters</a>
+        </div>
+      )
+    }
   </div>
 </Layout>
 
 <style>
+  .exam-page {
+    margin: var(--space-md) 0 var(--space-3xl);
+  }
+
   .empty-state {
     display: flex;
 
@@ -41,13 +85,7 @@ const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/example');
   .empty-state h1 {
     margin: 0;
 
-    color: var(--color-text);
-
     font-size: var(--font-size-display);
-
-    font-weight: var(--font-weight-semibold);
-
-    line-height: 1.15;
   }
 
   .empty-state p {
@@ -55,9 +93,7 @@ const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/example');
 
     color: var(--color-text-muted);
 
-    font-size: var(--font-size-body);
-
-    line-height: 1.5;
+    line-height: var(--line-height-relaxed);
   }
 
   .cta {
@@ -67,11 +103,11 @@ const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/example');
 
     padding: var(--space-sm) var(--space-lg);
 
-    border-radius: 4px;
+    border-radius: var(--radius-md);
 
     background: var(--color-accent);
 
-    color: var(--color-bg);
+    color: #ffffff;
 
     font-weight: var(--font-weight-semibold);
 

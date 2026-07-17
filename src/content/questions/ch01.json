@@ -1,0 +1,291 @@
+[
+  {
+    "id": "ch01-q01",
+    "chapter": "introduction",
+    "topic": "What is an operating system?",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "Which pair best describes the two roles an operating system plays?",
+    "choices": [
+      "Compiler and linker",
+      "Resource allocator and control program",
+      "Bootstrap loader and firmware",
+      "Shell and kernel"
+    ],
+    "answer": 1,
+    "solution": "As a resource allocator the OS decides who gets the CPU, memory, storage, and I/O devices — and for how long. As a control program it manages how user programs run so one misbehaving program can't take down the machine.",
+    "source": "Lecture slide 10"
+  },
+  {
+    "id": "ch01-q02",
+    "chapter": "introduction",
+    "topic": "What is an operating system?",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "The kernel is the one program that is always running on the computer.",
+    "answer": "true",
+    "solution": "True. The most common working definition of the OS is exactly this: the kernel is the one program running at all times while the machine is powered on. Everything else is a system program or an application program.",
+    "source": "Lecture slide 11"
+  },
+  {
+    "id": "ch01-q03",
+    "chapter": "introduction",
+    "topic": "Computer startup",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "Where is the bootstrap program stored, and why?",
+    "choices": [
+      "On the hard disk, because it is large",
+      "In main memory (RAM), because it is fast",
+      "In firmware (ROM/EPROM), because it must be reliable before any disk is read",
+      "In the CPU cache, because it runs first"
+    ],
+    "answer": 2,
+    "solution": "The bootstrap program must exist and work before anything else has loaded — including before a disk can be read — so it lives in firmware (ROM or EPROM) built into the hardware. Its job is to initialize the system and load the kernel.",
+    "source": "Lecture slide 13"
+  },
+  {
+    "id": "ch01-q04",
+    "chapter": "introduction",
+    "topic": "Storage-device hierarchy",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which storage medium can the CPU access directly?",
+    "choices": ["Hard-disk drive", "Main memory (RAM)", "Solid-state drive", "Magnetic tape"],
+    "answer": 1,
+    "solution": "Main memory is the only large storage the CPU can access directly (random access). Secondary storage — SSD, hard disk, tape — is reached through the I/O system, not directly by CPU instructions.",
+    "source": "Lecture slide 18"
+  },
+  {
+    "id": "ch01-q05",
+    "chapter": "introduction",
+    "topic": "Storage-device hierarchy",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "Registers, cache, and main memory are all volatile — they lose their contents when power is removed.",
+    "answer": "true",
+    "solution": "True. Everything from registers down through main memory is volatile. The volatile / nonvolatile boundary sits just below main memory: secondary storage (NVM/SSD, hard disk, optical, tape) is nonvolatile and survives a power cycle.",
+    "source": "Lecture slides 16–18"
+  },
+  {
+    "id": "ch01-q06",
+    "chapter": "introduction",
+    "topic": "Storage-device hierarchy",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Reading down the storage hierarchy from fastest to slowest, which is the FIRST nonvolatile tier?",
+    "choices": [
+      "Cache",
+      "Main memory (RAM)",
+      "Nonvolatile memory / SSD",
+      "CPU registers"
+    ],
+    "answer": 2,
+    "solution": "Registers → cache → main memory are all volatile. The nonvolatile secondary-storage tiers begin at nonvolatile memory / SSD, then hard disk, optical disk, and finally magnetic tape.",
+    "source": "Lecture slide 18"
+  },
+  {
+    "id": "ch01-q07",
+    "chapter": "introduction",
+    "topic": "Storage-device hierarchy",
+    "type": "numeric",
+    "difficulty": "easy",
+    "prompt": "How many bits are in one byte?",
+    "answer": 8,
+    "solution": "A byte is 8 bits. A bit is the smallest unit (a single 0 or 1); a word is whatever width the architecture works with natively. Beyond a byte, capacity scales in powers of 1024 (KB, MB, GB, TB, PB).",
+    "source": "Lecture slide 20"
+  },
+  {
+    "id": "ch01-q08",
+    "chapter": "introduction",
+    "topic": "Multiprocessing and clustered systems",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "In symmetric multiprocessing (SMP), how are the processors organized?",
+    "choices": [
+      "Each processor is assigned a specific, predefined task",
+      "Every processor is a peer, each running its own copy of the OS and sharing memory",
+      "One master processor controls several subordinate processors",
+      "Each processor is a separate machine linked by a SAN"
+    ],
+    "answer": 1,
+    "solution": "In SMP every processor is a peer: each runs an identical copy of the OS, can perform any task, and all share the same memory. Asymmetric multiprocessing instead assigns each processor a specific task.",
+    "source": "Lecture slide 22"
+  },
+  {
+    "id": "ch01-q09",
+    "chapter": "introduction",
+    "topic": "Multiprocessing and clustered systems",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Clustered systems typically share storage through a ___ to provide high-availability service.",
+    "choices": [
+      "system bus",
+      "storage-area network (SAN)",
+      "interrupt vector",
+      "device controller"
+    ],
+    "answer": 1,
+    "solution": "A cluster links multiple complete computers that share storage over a storage-area network (SAN), delivering high-availability service that survives a node failure. Clustering can be asymmetric (a hot-standby node) or symmetric (all nodes active).",
+    "source": "Lecture slide 24"
+  },
+  {
+    "id": "ch01-q10",
+    "chapter": "introduction",
+    "topic": "Multiprogramming and multitasking",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "What most directly distinguishes multitasking (timesharing) from plain multiprogramming?",
+    "choices": [
+      "It requires multiple CPUs",
+      "The CPU switches jobs frequently enough for interactive, real-time response",
+      "It eliminates the need for scheduling",
+      "It keeps only one job in memory at a time"
+    ],
+    "answer": 1,
+    "solution": "Both keep the CPU busy by switching among jobs. Multitasking is the interactive extension: the CPU switches so frequently that a user can interact with each program while it runs (response times under ~1 second).",
+    "source": "Lecture slides 26–27"
+  },
+  {
+    "id": "ch01-q11",
+    "chapter": "introduction",
+    "topic": "Multiprogramming and multitasking",
+    "type": "short",
+    "difficulty": "medium",
+    "prompt": "In one sentence, distinguish job scheduling from CPU scheduling.",
+    "answer": "Job scheduling decides which jobs are loaded into memory to run; CPU scheduling decides which of the ready, in-memory processes runs on the CPU next.",
+    "solution": "Job scheduling operates at the boundary of memory — choosing which jobs from the pool get brought in. CPU scheduling operates among the processes already in memory — choosing which ready process gets the CPU next.",
+    "source": "Lecture slides 26–27"
+  },
+  {
+    "id": "ch01-q12",
+    "chapter": "introduction",
+    "topic": "Interrupts",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "A trap (or exception) is a hardware interrupt raised by an external device.",
+    "answer": "false",
+    "solution": "False. A trap (or exception) is a SOFTWARE interrupt, triggered by the running program itself — either by an error (e.g. division by zero) or by a deliberate request for an OS service (a system call). Hardware interrupts come from devices.",
+    "source": "Lecture slide 29"
+  },
+  {
+    "id": "ch01-q13",
+    "chapter": "introduction",
+    "topic": "Interrupts",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "The interrupt vector is best described as:",
+    "choices": [
+      "A register that stores the mode bit",
+      "A table holding the addresses of the interrupt service routines",
+      "The signal a device sends to the CPU over the bus",
+      "A queue of processes waiting for the CPU"
+    ],
+    "answer": 1,
+    "solution": "The interrupt vector is a table of the addresses of all interrupt service routines. On an interrupt, control transfers through this table to the right handler — after the hardware first saves the address of the interrupted instruction so execution can resume.",
+    "source": "Lecture slide 31"
+  },
+  {
+    "id": "ch01-q14",
+    "chapter": "introduction",
+    "topic": "Interrupts",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "How does Direct Memory Access (DMA) make high-speed I/O efficient?",
+    "choices": [
+      "It interrupts the CPU once for every byte transferred",
+      "The CPU sets up the transfer, then the DMA controller moves an entire block, raising just one interrupt per block",
+      "It removes the need for device controllers entirely",
+      "It stores transferred data in CPU registers instead of memory"
+    ],
+    "answer": 1,
+    "solution": "Plain interrupt-driven I/O would interrupt the CPU for every byte. With DMA the CPU only sets up the transfer; the DMA controller then moves a whole block from the device to memory on its own, raising a single interrupt per block. That frees the CPU to do other work — one interrupt per block instead of one per byte.",
+    "source": "Ch.1 review deck (DMA)"
+  },
+  {
+    "id": "ch01-q15",
+    "chapter": "introduction",
+    "topic": "Operating-system operations and dual mode",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "What is the purpose of dual-mode (user / kernel) operation?",
+    "choices": [
+      "To make the CPU run faster",
+      "To let the OS protect itself and other programs from a misbehaving process",
+      "To increase the amount of usable memory",
+      "To schedule jobs more fairly"
+    ],
+    "answer": 1,
+    "solution": "Dual-mode operation exists for protection. Sensitive (privileged) instructions can run only in kernel mode, so a user-mode program can't directly touch hardware or OS state and bring down the system.",
+    "source": "Lecture slide 33"
+  },
+  {
+    "id": "ch01-q16",
+    "chapter": "introduction",
+    "topic": "Operating-system operations and dual mode",
+    "type": "mcq",
+    "difficulty": "hard",
+    "prompt": "According to the lecture slides, the CPU is executing operating-system (kernel) code when the mode bit is set to:",
+    "choices": ["0", "1", "either value — the bit is unrelated to mode", "2"],
+    "answer": 0,
+    "solution": "Lecture slide 34 (and the Silberschatz textbook) set kernel mode = 0 and user mode = 1. Heads-up: the Chapter 1 review deck lists this reversed (0 = user, 1 = kernel). The two course sources disagree on the bit value, so anchor on the CONCEPT — privileged instructions run only in kernel mode — and use whichever convention your specific exam states.",
+    "source": "Lecture slide 34 (note: review deck reverses the values)"
+  },
+  {
+    "id": "ch01-q17",
+    "chapter": "introduction",
+    "topic": "Operating-system operations and dual mode",
+    "type": "short",
+    "difficulty": "hard",
+    "prompt": "Dual-mode operation alone can't stop a user program stuck in an infinite loop. How does the OS still regain control?",
+    "answer": "The OS sets a hardware timer before handing the CPU to user code; when the timer expires it raises an interrupt that returns control to the OS. Setting the timer is a privileged instruction, so user code can't disable it.",
+    "solution": "A runaway loop never voluntarily returns to the OS, so the OS arms a timer beforehand. The timer interrupt forcibly returns control. Because setting/clearing the timer is a privileged (kernel-mode) instruction, a user program can't switch it off — that's what makes the protection airtight.",
+    "source": "Ch.1 review deck (dual mode & timers)"
+  },
+  {
+    "id": "ch01-q18",
+    "chapter": "introduction",
+    "topic": "Operating-system operations and dual mode",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which of the following is a privileged instruction that user-mode code may NOT execute directly?",
+    "choices": [
+      "Adding two registers",
+      "Setting the system timer",
+      "Reading a value from memory the program owns",
+      "Incrementing a loop counter"
+    ],
+    "answer": 1,
+    "solution": "I/O control, setting the timer, and interrupt management are privileged operations reserved for kernel mode. Ordinary arithmetic and reading your own memory are not privileged. A user program reaches privileged operations only by making a system call.",
+    "source": "Ch.1 review deck (dual mode & timers)"
+  },
+  {
+    "id": "ch01-q19",
+    "chapter": "introduction",
+    "topic": "Kernel data structures",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "A balanced binary search tree improves worst-case search performance from O(n) to:",
+    "choices": ["O(1)", "O(log n)", "O(n log n)", "O(n²)"],
+    "answer": 1,
+    "solution": "An arbitrary BST can degrade to O(n) in the worst case (a lopsided, list-like tree). Keeping it balanced guarantees the height stays logarithmic, so search is O(log n).",
+    "source": "Lecture slide 38"
+  },
+  {
+    "id": "ch01-q20",
+    "chapter": "introduction",
+    "topic": "Kernel data structures",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "A bitmap is used to represent:",
+    "choices": [
+      "The addresses of interrupt service routines",
+      "The on/off status of each of n items — for example which disk blocks are free",
+      "A sorted sequence of processes",
+      "The history of the mode bit"
+    ],
+    "answer": 1,
+    "solution": "A bitmap is a string of n binary digits, each recording the status (on/off, used/free) of one of n items. It's a compact way to track things like which blocks of a disk are currently free.",
+    "source": "Lecture slide 39"
+  }
+]

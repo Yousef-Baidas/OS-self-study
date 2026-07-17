@@ -3,10 +3,8 @@
 // shown only below --bp-desktop. Home links, Chapters opens the slide-in
 // drawer (owned by Sidebar.astro's "drawer" variant — connected purely via
 // DOM ids per RESEARCH Pattern 5, not a prop/import coupling), Exam links to
-// the "coming soon" page with a muted "Soon" badge (never accent — UI-SPEC
-// Copywriting Contract keeps it from reading as an active/available
-// control). The theme toggle is intentionally NOT here (D-13); it stays in
-// the header (D-16, wired in Plan 04).
+// the live exam-mode page. The theme toggle is intentionally NOT here (D-13);
+// it stays in the header (D-16, wired in Plan 04).
 import { joinBase } from '../lib/withBase';
 
 import Home from './icons/Home.astro';
@@ -56,11 +54,7 @@ const isExam = currentPath.startsWith(examHref);
   >
     <ClipboardList width="22" height="22" />
 
-    <span class="bottom-nav-label">
-      Exam
-
-      <span class="bottom-nav-badge">Soon</span>
-    </span>
+    <span class="bottom-nav-label">Exam</span>
   </a>
 </nav>
 
@@ -138,23 +132,5 @@ const isExam = currentPath.startsWith(examHref);
     font-size: var(--font-size-label);
 
     line-height: 1.2;
-  }
-
-  .bottom-nav-badge {
-    padding: 1px 6px;
-
-    border-radius: 999px;
-
-    background: var(--color-border);
-
-    color: var(--color-text-muted);
-
-    font-size: 10px;
-
-    font-weight: var(--font-weight-semibold);
-
-    text-transform: uppercase;
-
-    letter-spacing: 0.02em;
   }
 </style>
