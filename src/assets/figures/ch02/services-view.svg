@@ -1,0 +1,40 @@
+<svg viewBox="0 0 580 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- A view of operating-system services (slide 2 analog): user and system
+       programs sit above the system-call interface; the OS services layer sits
+       between that interface and the hardware. The full list of services lives
+       in the section's comparison table — this figure shows only where they sit. -->
+  <defs>
+    <marker id="arw-svc" markerWidth="12" markerHeight="12" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,3.5 L0,7 Z" class="fg-arrow" />
+    </marker>
+  </defs>
+
+  <!-- user & system programs -->
+  <rect x="24" y="20" width="532" height="52" rx="10" class="fg-node" />
+
+  <text x="290" y="51" text-anchor="middle" class="fg-text" font-size="15">User and system programs</text>
+
+  <!-- system-call interface boundary -->
+  <line x1="24" y1="104" x2="556" y2="104" class="fg-line" stroke-dasharray="5 6" />
+
+  <rect x="205" y="93" width="170" height="22" rx="11" class="fg-node" />
+
+  <text x="290" y="108" text-anchor="middle" class="fg-mono" font-size="10.5" fill="var(--color-text-muted)">system-call interface</text>
+
+  <!-- operating-system services -->
+  <rect x="24" y="130" width="532" height="94" rx="10" class="fg-node-accent" />
+
+  <text x="290" y="166" text-anchor="middle" class="fg-text" font-size="15">Operating-system services</text>
+
+  <text x="290" y="192" text-anchor="middle" class="fg-text-muted" font-size="12.5">helpful to the user &#8226; helpful to the system</text>
+
+  <!-- hardware -->
+  <rect x="24" y="256" width="532" height="46" rx="10" class="fg-node-strong" />
+
+  <text x="290" y="284" text-anchor="middle" class="fg-text" font-size="15">Hardware</text>
+
+  <!-- programs call down through the interface into services, services onto hardware -->
+  <path d="M290 72 L290 92" class="fg-line" marker-end="url(#arw-svc)" />
+
+  <path d="M290 224 L290 254" class="fg-line" marker-end="url(#arw-svc)" />
+</svg>

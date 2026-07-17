@@ -1,0 +1,308 @@
+---
+number: 2
+title: "Operating-System Structures"
+slug: "operating-system-structures"
+summary: "The inside view of an operating system — the services it offers, the system-call interface programs reach them through, how a shell launches a program with fork/exec/wait, the five ways to structure a kernel from monolithic to microkernel, and how a system boots and gets debugged."
+topics:
+  - "Operating-system services"
+  - "The user interface — CLI, GUI, touch"
+  - "System calls"
+  - "System-call parameter passing"
+  - "The five system-call categories"
+  - "fork(), exec(), and wait()"
+  - "System programs"
+  - "Operating-system structure"
+  - "System boot"
+  - "Operating-system debugging"
+slideCount: 57
+status: "complete"
+---
+
+import Callout from '../../components/Callout.astro';
+
+import Figure from '../../components/Figure.astro';
+
+import Lead from '../../components/Lead.astro';
+
+import SlideRef from '../../components/SlideRef.astro';
+
+import CategorySorter from '../../widgets/ch02/CategorySorter.svelte';
+
+import OsStructureExplorer from '../../widgets/ch02/OsStructureExplorer.svelte';
+
+import SyscallJourney from '../../widgets/ch02/SyscallJourney.svelte';
+
+<Callout type="key">
+  **By the end of this chapter you can:** list the services an OS provides and split them into
+  user-helpful vs system-helpful; tell a **system call** apart from an **API** and trace how one is
+  made — the mode switch and the ways parameters get passed; name the **five system-call
+  categories**; explain how a shell launches a program with **`fork`/`exec`/`wait`**; compare the
+  **five ways to structure** an OS (monolithic, layered, microkernel, modular, hybrid); and describe
+  how a system **boots** and how operating systems are **debugged and tuned**.
+</Callout>
+
+## Operating-System Services
+
+<Lead n={3} chapter={2}>An OS provides a set of services — some to make the machine convenient for the user, some to keep the system itself running efficiently.</Lead>
+
+The services an operating system offers fall into **two groups** <SlideRef n={3} chapter={2} />:
+
+| Group | Services |
+| --- | --- |
+| **Helpful to the user** | User interface · Program execution · I/O operations · File-system manipulation · Communications · Error detection |
+| **Helpful to the system** | Resource allocation · Accounting (logging) · Protection and security |
+
+The first group exists to make computing useful and convenient <SlideRef from={4} to={14} chapter={2} />:
+
+- **User interface** — a CLI, GUI, touch, or batch interface (the next section covers these).
+
+- **Program execution** — load a program into memory and run it, ending normally or on error.
+
+- **I/O operations** — a running program may need I/O to a file or a device.
+
+- **File-system manipulation** — read, write, create, delete, and search files and directories, list file information, and manage permissions.
+
+- **Communications** — let processes exchange information on the same computer or across a network, via **shared memory** or **message passing**.
+
+- **Error detection** — stay aware of errors in the CPU, memory, I/O devices, and user programs, and take the appropriate action; debugging facilities help here.
+
+The second group keeps the system itself efficient and safe <SlideRef from={15} to={17} chapter={2} />:
+
+- **Resource allocation** — divide CPU cycles, main memory, file storage, and I/O devices among multiple users or concurrent jobs.
+
+- **Accounting (logging)** — track which users use how much of which resources.
+
+- **Protection and security** — control all access to system resources, keep concurrent processes from interfering, authenticate users, and defend against outsiders.
+
+<Figure
+  src="figures/ch02/services-view.svg"
+  alt="A view of operating-system services: user and system programs sit above the system-call interface, the operating-system services layer sits below it, and the hardware sits at the bottom"
+  caption="Figure 2.1 — Programs reach the operating-system services through the system-call interface; the services sit above the hardware."
+/>
+
+Sort each one yourself — is it there mainly for the user, or for the system?
+
+<CategorySorter dataset="services" client:visible />
+
+## The User Interface — CLI, GUI, Touch
+
+<Lead from={4} to={9} chapter={2}>Users reach the OS through a command line, a graphical desktop, or a touch surface — and a shell is the program that reads their typed commands.</Lead>
+
+Almost every OS offers a user interface, and it comes in a few forms <SlideRef from={4} to={8} chapter={2} />:
+
+| Aspect | Command-Line Interface (CLI) | Graphical User Interface (GUI) |
+| --- | --- | --- |
+| Input | Typed text commands via the keyboard | Pointer + keyboard over icons and windows |
+| Metaphor | A command prompt / terminal | The desktop metaphor (invented at **Xerox PARC**) |
+| Examples | PowerShell (Windows), Bash (Ubuntu), zsh (macOS) | Windows desktop, GNOME (Ubuntu), Aqua (macOS) |
+
+A third form, the **touchscreen interface**, drops the mouse entirely: actions come from **gestures**, text from a **virtual keyboard**, and some input from **voice commands** <SlideRef n={8} chapter={2} />. Many systems ship more than one — Windows is a GUI with a command shell, macOS is the Aqua GUI over a UNIX kernel with shells available, and Linux is a CLI with optional GUIs <SlideRef n={7} chapter={2} />.
+
+<Callout type="note">
+  The **command interpreter** is the program that fetches a command and runs it. On some systems it
+  lives **in the kernel**; on others it is a separate **system program** <SlideRef from={5} to={19} chapter={2} />. When a
+  system offers several to choose from, they are called **shells** — Bourne shell, **Bash** (Bourne
+  Again shell), C shell, PowerShell. Some commands are **built into** the shell; others are just the
+  **names of programs**. When it's the latter, adding a new command needs no change to the shell —
+  you just add a program it can find and run.
+</Callout>
+
+## System Calls
+
+<Lead n={22} chapter={2}>A system call is the programmatic doorway from a user program into a kernel service — usually reached through a higher-level API, not by name.</Lead>
+
+Most programs run in **user mode**, which is safer, but they still need privileged resources — memory, I/O, files. To get one, a program makes a **system call**, which **switches the CPU from user mode to kernel mode** (a context switch), lets the kernel do the privileged work, and switches back <SlideRef n={22} chapter={2} />.
+
+You rarely write a system call by hand. Programs reach them through a higher-level **Application Programming Interface (API)** <SlideRef n={23} chapter={2} />. Three dominate:
+
+| API | Platform |
+| --- | --- |
+| **Win32 API** | Windows |
+| **POSIX API** | UNIX, Linux, macOS |
+| **Java API** | The Java Virtual Machine (JVM) |
+
+<Callout type="note">
+  **API vs. system call.** The API is the function you actually call in your code — for example the
+  C library's `read()`. It, in turn, invokes the real `read()` **system call** in the kernel. You
+  program to the API; the API talks to the kernel. This indirection keeps your code decoupled from
+  kernel specifics and makes it far more portable.
+</Callout>
+
+Often a call needs more than just its own identity — it needs **parameters**. There are three ways to pass them to the OS <SlideRef n={26} chapter={2} />:
+
+| Method | How it works | Used by |
+| --- | --- | --- |
+| **Registers** | Parameters go straight into CPU registers | Simplest — DOS |
+| **Block / table** | Parameters sit in a memory block; the block's **address** goes in a register | Linux, Solaris |
+| **Stack** | The program **pushes** parameters; the OS **pops** them | Windows |
+
+The block and stack methods matter because, unlike registers, they don't cap the **number or length** of parameters you can pass.
+
+<Figure
+  src="figures/ch02/syscall-parameter-passing.svg"
+  alt="Passing system-call parameters via a table: a register holds the address of a parameter block in memory, the block holds parameters 1 through 3, and the operating system reads the parameters from the block"
+  caption="Figure 2.2 — The block/table method: a register holds the address of a parameter block, and the OS reads the parameters from that block."
+/>
+
+Whatever the call does, it falls into one of **five categories** <SlideRef from={28} to={33} chapter={2} />:
+
+| Category | What it covers | Example calls |
+| --- | --- | --- |
+| **Process control** | Create/terminate processes, load & execute, wait for events, allocate memory | `fork`, `exit`, `wait` |
+| **File management** | Create/delete/open/close/read/write files, get & set attributes | `open`, `read`, `write` |
+| **Device management** | Request/release devices, read/write, attach/detach | `ioctl`, `read` |
+| **Information maintenance** | Get/set time & date, system data, and attributes | `gettimeofday` |
+| **Communications** | Create/delete connections, send/receive messages, shared memory | `send`, `recv` |
+
+Now classify a few calls yourself:
+
+<CategorySorter dataset="syscalls" client:visible />
+
+## From `fork()` to a Running Program
+
+<Lead from={35} to={36} chapter={2}>A UNIX shell launches a program by forking a copy of itself, replacing that copy with the new program, and waiting for it to finish.</Lead>
+
+Between your code and the kernel sits the **standard C library**. Calling `printf()` runs a C-library function that ultimately makes the `write()` **system call** — the library is the API layer from the previous section made concrete <SlideRef n={35} chapter={2} />.
+
+Put together, here is how a shell on a UNIX variant such as **FreeBSD** runs a command <SlideRef n={36} chapter={2} />:
+
+- **`fork()`** — create a new process as a copy of the shell.
+
+- **`exec()`** — replace that copy's memory image with the requested program.
+
+- **`wait()`** — the shell blocks until the program finishes (or, if it doesn't wait, keeps taking commands).
+
+- The program **exits** with a code: `0` means no error, and any value **`> 0`** is an error code.
+
+Step through the whole sequence — and watch the CPU's mode bit flip on every system call:
+
+<SyscallJourney client:visible />
+
+The same sequence in C — `fork()` returns **twice**, and the return value is how each process knows which one it is:
+
+```c title="shell-launch.c" {5,9,14}
+#include <sys/wait.h>
+#include <unistd.h>
+
+int main(void) {
+  pid_t pid = fork();            // clone the shell: BOTH processes continue from here
+
+  if (pid == 0) {
+    // child — pid is 0 here; replace this process image with a new program
+    execlp("/bin/ls", "ls", NULL);   // exec() never returns on success
+    _exit(1);                    // only reached if exec() failed to load the program
+  } else {
+    // parent — pid holds the child's PID
+    int status;
+    wait(&status);               // block until the child terminates
+    // WEXITSTATUS(status): 0 = no error, > 0 = the child's error code
+  }
+
+  return 0;
+}
+```
+
+<Callout type="note">
+  The single `fork()` call returns **twice** — once in the parent (where it returns the child's
+  **PID**) and once in the child (where it returns **0**). That one difference in the return value
+  is the entire basis for the `if (pid == 0)` split that sends the child down the `exec()` path and
+  keeps the parent on the `wait()` path.
+</Callout>
+
+## System Programs
+
+<Lead from={37} to={39} chapter={2}>System programs sit above the OS to give users and developers a convenient environment — some are thin wrappers over system calls, others are full applications.</Lead>
+
+**System programs** provide a convenient environment for program development and execution. Some are simply a user-facing interface to system calls; others are considerably more complex <SlideRef n={37} chapter={2} />. They divide into file manipulation, status information, programming-language support, program loading & execution, communications, background services, and application programs.
+
+Two categories are worth pinning down <SlideRef n={38} chapter={2} />:
+
+| Category | What it is |
+| --- | --- |
+| **Background services** | Daemons launched at boot. Some run only for **startup** then quit; others run from **boot to shutdown**, providing disk checking, process scheduling, error logging, and printing. |
+| **Application programs** | Not part of the OS at all — run by users, not tied to the system's own operation. |
+
+<Callout type="note">
+  **What an OS is written in** <SlideRef n={39} chapter={2} />: early operating systems were pure assembly, then
+  system-programming languages like Algol and PL/1, and today mostly **C/C++** — but really a
+  **mix**. The lowest levels stay in **assembly**, the main body is **C**, and system programs use
+  C, C++, or scripting languages like Perl and Python. Higher-level languages are **easier to port**
+  but **slower**; emulation can let an OS run on non-native hardware.
+</Callout>
+
+## Operating-System Structure
+
+<Lead from={40} to={48} chapter={2}>A general-purpose OS is a huge program — and there are several ways to structure it, from one monolithic block to a tiny microkernel with everything else pushed into user space.</Lead>
+
+A general-purpose OS is a very large program, and there is no single right way to organize it <SlideRef n={40} chapter={2} />. Five models recur:
+
+| Structure | Core idea | Example | Communication |
+| --- | --- | --- | --- |
+| **Monolithic** | Everything runs in one kernel address space | Original UNIX, Linux core | Direct function calls |
+| **Layered** | Stacked levels, each built on the one below | THE (teaching model) | Layer *N* → layer *N−1* |
+| **Microkernel** | Minimal kernel; services pushed to user space | Mach | Message passing |
+| **Modular** | A small core plus loadable modules | Linux, Solaris | Known interfaces |
+| **Hybrid** | A blend of several models | macOS, Windows, Android | Combination |
+
+Switch between them below and watch where each model puts its components — above or below the user/kernel line — and how those components talk to each other:
+
+<OsStructureExplorer client:visible />
+
+<Callout type="note">
+  In practice **no modern OS is a pure model** <SlideRef n={48} chapter={2} />. Linux is monolithic **plus** modular
+  loading; Windows is mostly monolithic **plus** a microkernel-style subsystem layer; and macOS/iOS
+  layer a **Mach microkernel**, **BSD** UNIX parts, and dynamically loadable **kernel extensions**.
+  Hybrids exist precisely to balance performance, security, and usability at once.
+</Callout>
+
+## System Boot
+
+<Lead n={54} chapter={2}>At power-on the CPU jumps to a fixed address, runs a small bootstrap loader from firmware, and that loader finds and starts the kernel.</Lead>
+
+When power is applied, execution starts at a **fixed memory location**, and the OS must be made available to the hardware so the hardware can start it <SlideRef n={54} chapter={2} />. The sequence:
+
+- A small piece of code — the **bootstrap loader**, historically the **BIOS**, stored in **ROM or EEPROM** — locates the kernel, loads it into memory, and starts it.
+
+- Sometimes it's a **two-step** process: a **boot block** at a fixed location, loaded by ROM code, then loads the full bootstrap loader from disk.
+
+- Modern systems replace BIOS with **UEFI** (Unified Extensible Firmware Interface).
+
+- A common loader, **GRUB**, lets you choose a kernel — across multiple disks, versions, and options — and boot into states like **single-user mode**. Once the kernel loads, the system is running.
+
+<Callout type="note">
+  This is the same **bootstrap program** from Chapter 1, seen from the boot-loader side: Chapter 1
+  framed *why* it lives in firmware (it must run before any disk is read); here the emphasis is
+  *what* it does — locate, load, and launch the kernel, with UEFI and GRUB as the modern pieces.
+</Callout>
+
+## Operating-System Debugging
+
+<Lead from={55} to={57} chapter={2}>Debugging spans two jobs — finding failures through logs and dumps, and tuning performance through profiling and tracing.</Lead>
+
+**Debugging** is finding and fixing errors (bugs) — and it also covers **performance tuning** <SlideRef n={55} chapter={2} />. When something fails, the system leaves evidence: operating systems write **log files** with error information, and two kinds of memory dump capture the state at the moment of failure:
+
+| Dump | Captures | Produced when |
+| --- | --- | --- |
+| **Core dump** | The failed **process's** memory image | An **application** fails |
+| **Crash dump** | **Kernel** memory | The **operating system** itself fails |
+
+Beyond crashes, **performance tuning** removes bottlenecks, so the OS must be able to compute and display measures of its own behavior — think **`top`** on Linux or **Task Manager** on Windows <SlideRef n={56} chapter={2} />. Two techniques dig deeper: **trace listings** record activity for later analysis, and **profiling** periodically samples the instruction pointer to spot statistical trends. Modern Linux does much of this with **BPF/bcc** tracing tools <SlideRef n={57} chapter={2} />.
+
+<Callout type="note">
+  **Kernighan's Law.** "Debugging is twice as hard as writing the code in the first place.
+  Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough
+  to debug it." The practical takeaway: favor clarity over cleverness, because you will have to debug
+  what you write.
+</Callout>
+
+<Callout type="key">
+  **Key takeaways:** an OS exposes **services** split into user-helpful and system-helpful, reached
+  by user programs through the **system-call interface** — usually via a higher-level **API** rather
+  than by name, with parameters passed in **registers**, a **block**, or the **stack**. Every call
+  falls into one of **five categories**, and the classic `fork()` → `exec()` → `wait()` sequence
+  shows them in motion as a shell launches a program, flipping the CPU between **user and kernel
+  mode**. Kernels are structured as **monolithic**, **layered**, **microkernel**, **modular**, or —
+  in every real system — **hybrid**. A machine starts through a firmware **bootstrap loader**
+  (BIOS/UEFI, GRUB) that loads the kernel, and is kept healthy through **logs, core/crash dumps,
+  profiling, and tracing**.
+</Callout>

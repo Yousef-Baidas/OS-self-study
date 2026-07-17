@@ -1,0 +1,47 @@
+<svg viewBox="0 0 580 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Passing parameters via a table/block (slides 26-27): a register holds the
+       ADDRESS of a parameter block in memory; the block holds the parameters;
+       the OS reads them from the block. This is the method Linux and Solaris
+       use, and the one that sidesteps the register-count and stack limits. -->
+  <defs>
+    <marker id="arw-pp" markerWidth="12" markerHeight="12" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,3.5 L0,7 Z" class="fg-arrow" />
+    </marker>
+  </defs>
+
+  <!-- register holding the block's address -->
+  <rect x="24" y="112" width="150" height="64" rx="10" class="fg-node" />
+
+  <text x="99" y="139" text-anchor="middle" class="fg-text" font-size="14">Register X</text>
+
+  <text x="99" y="160" text-anchor="middle" class="fg-mono" font-size="11" fill="var(--color-text-muted)">address →</text>
+
+  <!-- parameter block in user memory -->
+  <rect x="238" y="40" width="180" height="208" rx="10" class="fg-panel" />
+
+  <text x="328" y="66" text-anchor="middle" class="fg-text-muted" font-size="12">parameter block (in memory)</text>
+
+  <rect x="258" y="82" width="140" height="42" rx="8" class="fg-node" />
+
+  <text x="328" y="108" text-anchor="middle" class="fg-text" font-size="13">parameter 1</text>
+
+  <rect x="258" y="132" width="140" height="42" rx="8" class="fg-node" />
+
+  <text x="328" y="158" text-anchor="middle" class="fg-text" font-size="13">parameter 2</text>
+
+  <rect x="258" y="182" width="140" height="42" rx="8" class="fg-node" />
+
+  <text x="328" y="208" text-anchor="middle" class="fg-text" font-size="13">parameter 3</text>
+
+  <!-- operating system reads the block -->
+  <rect x="470" y="112" width="86" height="64" rx="10" class="fg-node-accent" />
+
+  <text x="513" y="139" text-anchor="middle" class="fg-text" font-size="14">OS</text>
+
+  <text x="513" y="160" text-anchor="middle" class="fg-text-muted" font-size="10.5">reads block</text>
+
+  <!-- register points at the block; OS reads from it -->
+  <path d="M174 132 C 206 120, 220 96, 256 90" class="fg-line" marker-end="url(#arw-pp)" />
+
+  <path d="M418 144 L468 144" class="fg-line" marker-end="url(#arw-pp)" />
+</svg>

@@ -8,6 +8,7 @@
 //   <Lead>Just the essence, no citation.</Lead>
 //   <Lead from={16} to={20}>Storage is layered by speed, cost, volatility.</Lead>
 //   <Lead n={12}>A modern computer is CPUs + controllers on a shared bus.</Lead>
+//   <Lead n={54} chapter={2}>...</Lead>  // pass chapter so the citation's aria is right
 import SlideRef from './SlideRef.astro';
 
 interface Props {
@@ -16,9 +17,11 @@ interface Props {
   from?: number;
 
   to?: number;
+
+  chapter?: number;
 }
 
-const { n, from, to } = Astro.props;
+const { n, from, to, chapter = 1 } = Astro.props;
 
 const hasRef = n != null || (from != null && to != null);
 ---
@@ -26,7 +29,7 @@ const hasRef = n != null || (from != null && to != null);
 <p class="lead">
   <slot />
 
-  {hasRef && <SlideRef n={n} from={from} to={to} />}
+  {hasRef && <SlideRef n={n} from={from} to={to} chapter={chapter} />}
 </p>
 
 <style>
