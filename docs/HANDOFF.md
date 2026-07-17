@@ -25,6 +25,8 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
 - **Exam mode** — live at `/exam`. `QuizRunner.svelte` island: filter by topic/difficulty → answer
   mcq / true-false / numeric / short → instant feedback with worked solution + slide citation →
   score + review-your-misses → resumable via localStorage. Seeded with 20 Chapter-1 questions.
+- **Deployed** — live on GitHub Pages at <https://yousef-baidas.github.io/OS-self-study/>.
+  `main` is now the trunk/deploy branch (fast-forwarded from `foundation`); push to `main` → auto-deploy.
 
 ## Where things live
 
@@ -38,6 +40,14 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
 | Exam engine | `src/widgets/exam/QuizRunner.svelte`, page `src/pages/exam/index.astro` |
 | Design tokens / globals | `src/styles/tokens.css`, `src/styles/global.css` |
 | Source slides / review PDFs | `CONTENT/slides/OS_chapterN.pptx`, `CONTENT/*.pdf` |
+
+## Deploy
+
+Live: **https://yousef-baidas.github.io/OS-self-study/** — GitHub Pages, Actions source.
+`main` is the trunk and deploy branch: any push to `main` runs `.github/workflows/deploy.yml`
+(`withastro/action@v6` + `actions/deploy-pages@v5`) and republishes in ~30s — no PR needed for a
+solo push. `CONTENT/` stays gitignored so the copyrighted decks are never published. On mobile,
+hard-refresh to beat the Pages cache after a deploy.
 
 ## Next up
 
