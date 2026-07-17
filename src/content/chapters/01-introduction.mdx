@@ -21,277 +21,263 @@ import Callout from '../../components/Callout.astro';
 
 import Figure from '../../components/Figure.astro';
 
+import Lead from '../../components/Lead.astro';
+
+import SlideRef from '../../components/SlideRef.astro';
+
 import StorageHierarchy from '../../widgets/ch01/StorageHierarchy.svelte';
 
 import InterruptCycle from '../../widgets/ch01/InterruptCycle.svelte';
 
 <Callout type="key">
-  By the end of this chapter, you should be able to explain what an operating system is and the
-  two ways of thinking about its job (resource allocator, control program); describe how a
-  computer starts up and organizes its hardware around a shared bus and memory; place a piece of
-  data correctly within the storage-device hierarchy; distinguish multiprocessing from
-  multiprogramming and multitasking; trace the interrupt-driven cycle that lets a CPU respond to
-  devices and software events; and explain why an operating system needs a protected, dual-mode
-  boundary between itself and the programs it runs.
+  **By the end of this chapter you can:** say what an OS is and name its two jobs (resource
+  allocator + control program); trace how a computer boots and organizes its hardware on a shared
+  bus; place a piece of data correctly in the storage hierarchy; tell multiprocessing apart from
+  multiprogramming and multitasking; walk the interrupt cycle end to end; and explain why the
+  hardware enforces a dual-mode boundary between the OS and the programs it runs.
 </Callout>
 
 ## What Is an Operating System?
 
-A modern computer system is built from four kinds of components working together: the
-**hardware** — the CPU, memory, and I/O devices that do the actual physical work; the
-**operating system**, which controls and coordinates that hardware on behalf of everything else;
-the **application programs** — word processors, browsers, games — that define the ways you
-actually want to use the machine; and the **users** themselves, whether people, other computers,
-or other programs.
+<Lead from={6} to={11}>The one program that is always running — it manages the hardware and stands between you and the machine.</Lead>
 
-These pieces don't talk to each other directly in a flat way — they're layered. You, the user,
-sit at the top, interacting with application programs and utilities such as a compiler, an
-assembler, a text editor, or a database system. Those programs, in turn, rely on the operating
-system to reach the hardware underneath. The operating system is the one layer that touches
-everything: it sits directly on top of the hardware and provides the services every layer above
-it depends on.
+An **operating system** is a program that manages a computer's hardware, provides a base for
+application programs, and acts as an **intermediary** between the user and the hardware <SlideRef n={6} />. A computer
+system has four layered components <SlideRef n={3} />:
+
+| Component | What it contributes |
+| --- | --- |
+| Hardware | Basic computing resources — CPU, memory, I/O devices |
+| Operating system | Controls and coordinates the hardware among apps and users |
+| Application programs | Define how the resources solve users' problems — browsers, compilers, games |
+| Users | People, machines, or other programs |
 
 <Figure
   src="figures/ch01/system-structure.svg"
   alt="System structure diagram: users and their application programs sit on top of the operating system, which sits directly on top of the computer hardware"
-  caption="Figure 1.1 — Computer system structure: users and programs layered above the operating system, which sits directly above the hardware."
+  caption="Figure 1.1 — Users and programs are layered above the operating system, which sits directly above the hardware."
 />
 
-You've almost certainly used several operating systems already: Windows, macOS, Linux, Unix, and
-Ubuntu are all common examples — some are commercial products, others (like Linux and Ubuntu) are
-open-source.
+**Three goals** shape everything the OS does <SlideRef n={7} />:
 
-So what does an operating system actually do? At its simplest, it **manages the hardware**, gives
-application programs a foundation to build on, and acts as an **intermediary** between you and the
-hardware — smoothing over the fact that raw hardware is far too complicated and inconsistent for
-you or a typical program to deal with directly. Its goals are to let user programs execute
-conveniently, to make the computer easy to use, and to use the underlying hardware efficiently.
+- Run user programs and make solving problems easier.
 
-Whose convenience matters depends on who you ask. From a **user's** point of view — someone
-sitting at a PC or a workstation — what matters is convenience, ease of use, and good performance;
-nobody using the machine day-to-day cares how efficiently its resources are being utilized under
-the hood. But systems are frequently shared among many users at once (think of a server, or a
-mainframe), and in that setting the operating system has to balance those users' needs so all of
-them stay reasonably happy, not just the loudest one.
+- Make the computer system **convenient** to use.
 
-Zoom out to the **system's** own point of view, though, and the operating system looks like
-something else entirely: a **resource allocator** — the entity responsible for managing and
-allocating the machine's resources (CPU time, memory space, storage space for files, I/O devices)
-among the many programs and users competing for them.
+- Use the hardware **efficiently**.
+
+Whose interests come first depends on who's asking <SlideRef from={8} to={9} />:
+
+| Question | User view | System view |
+| --- | --- | --- |
+| What matters most? | Convenience, ease of use, performance | Efficient, fair use of resources |
+| Cares about utilization? | No | Yes |
+| So the OS looks like… | A helpful intermediary | A **resource allocator** |
 
 <Callout type="note">
-  An operating system wears two hats at once. As a **resource allocator**, it decides who gets
-  the CPU, memory, storage, and I/O devices, and for how long. As a **control program**, it
-  manages the execution of user programs to prevent errors and improper use of the computer —
-  keeping one misbehaving program from taking down the whole system.
+  The OS wears two hats at once <SlideRef n={10} />. As a **resource allocator** it decides who gets the CPU,
+  memory, storage, and I/O devices — and for how long. As a **control program** it manages how
+  user programs run, so one misbehaving program can't take down the whole machine.
 </Callout>
 
-Put those two roles together and you get the most common working definition: the operating system
-is simply **the one program that is always running** on the computer, for as long as it's powered
-on. That program is the **kernel** — the core of the operating system. Everything else on the
-machine is either a **system program**, associated with the operating system but not part of the
-kernel itself, or an **application program**, which covers everything not associated with the
-operating system's own operation.
+That gives the working definition we'll use throughout the course: the OS is **the one program
+always running** on the computer — the **kernel** <SlideRef n={11} />. Everything else is either a **system
+program** (ships with the OS but isn't in the kernel) or an **application program** (everything
+not tied to the OS's own operation). You've already used several: Windows, macOS, Linux, Unix,
+and Ubuntu — some commercial, some open-source <SlideRef n={5} />.
 
 ## Computer System Organization
 
-Zoom in on the hardware layer itself, and a modern computer system's organization is fairly simple
-to state: one or more **CPUs** and a number of **device controllers** are all connected through a
-**common bus** that provides access to **shared memory**. Every device controller manages a
-specific type of device — a disk, a USB port, a graphics adapter — and each CPU and device
-controller can run concurrently, all competing for memory cycles across that same shared bus.
+<Lead n={12}>One or more CPUs and a set of device controllers share a common bus that reaches shared memory.</Lead>
+
+- **CPUs** and **device controllers** all connect through a **common bus** to **shared memory**.
+
+- Each **device controller** manages one type of device (a disk, a USB port, a graphics adapter) and has a local buffer.
+
+- CPUs and controllers run **concurrently**, competing for memory cycles across that shared bus.
 
 <Figure
   src="figures/ch01/computer-organization.svg"
   alt="Computer system organization diagram: one or more CPUs and several device controllers, each connected to a common system bus that leads to shared memory"
-  caption="Figure 1.2 — Computer system organization: CPUs and device controllers sharing a common bus to memory."
+  caption="Figure 1.2 — CPUs and device controllers share a common bus to memory."
 />
 
 ## Computer Startup
 
-Before any of that hardware can do useful work, it has to be woken up. When a computer is powered
-on or rebooted, it needs an initial program to run — this is the **bootstrap program**. The
-bootstrap program initializes every part of the system, from CPU registers to device controllers
-to memory contents, and its job is to find and load the operating system **kernel**, then start
-executing it.
+<Lead n={13}>At power-on, a firmware bootstrap program wakes the hardware and loads the kernel.</Lead>
 
-Because the bootstrap program has to exist and be reliable before anything else on the machine has
-been loaded, it's stored in **firmware** — read-only memory built into the hardware itself (ROM or
-EPROM) rather than on a disk that could fail to be readable. This is exactly what you're watching
-when a machine shows a manufacturer's boot screen right after you power it on, followed shortly by
-the operating system's own loading screen as the kernel comes up into memory.
+The **bootstrap program** is the first code to run when a machine is powered on or rebooted <SlideRef n={13} />. Its job:
+
+- **Initialize** every part of the system — CPU registers, device controllers, memory contents.
+
+- **Find and load** the operating-system **kernel**, then start executing it.
+
+<dl>
+  <dt>Firmware</dt>
+
+  <dd>Read-only memory (ROM or EPROM) built into the hardware. The bootstrap lives here because it must be reliable <strong>before</strong> any disk has been read.</dd>
+</dl>
+
+This is exactly what you watch at startup: a manufacturer boot screen (firmware), then the OS's
+own loading screen as the kernel comes up into memory.
 
 ## Storage-Device Hierarchy
 
-Not all storage on a computer is created equal — some of it is blazingly fast but tiny, some of it
-is enormous but slow, and understanding where a given piece of data sits tells you a lot about how
-the system is using it. Storage systems are organized into a **hierarchy**, by speed, cost, and
-volatility.
+<Lead from={16} to={20}>Storage is layered by speed, cost, and volatility — and where a piece of data sits tells you how the system uses it.</Lead>
 
-At the very top, closest to the CPU, are **registers** and **cache** — the fastest, smallest, and
-most expensive storage in the system, and both are **volatile**: they lose their contents entirely
-if power is removed. Just below them sits **main memory** (RAM), still volatile, still fast, but
-larger and cheaper than cache. That's the boundary line on the hierarchy: everything above it
-disappears when the power goes out; everything below it doesn't.
+Storage is organized into a **hierarchy** ordered by speed, cost, and volatility <SlideRef n={16} />. The single most
+exam-worthy line in that hierarchy is the **volatile / nonvolatile boundary**:
 
-Below the volatile/nonvolatile line comes **secondary storage** — an extension of main memory that
-provides large, **nonvolatile** capacity so a system's data survives a power cycle. This tier
-begins with **nonvolatile memory** devices, continues through **hard-disk drives**, then
-**optical disks**, and finally **magnetic tapes** at the very bottom — slower and larger at each
-step down, all the way to tape, which is slow enough that it's typically used only for backups,
-not everyday access.
+- **Volatile** — lost the instant power is removed: **registers** → **cache** → **main memory (RAM)**.
+
+- **Nonvolatile** — survives a power cycle: **NVM / SSD** → **hard disk** → **optical disk** → **magnetic tape** (slowest, backups only).
+
+Two tiers you must be precise about <SlideRef n={18} />:
+
+- **Main memory (RAM)** — the *only* large storage the CPU can access **directly**; random-access; **volatile**.
+
+- **Secondary storage** — a **nonvolatile** extension of main memory, for data that must outlive a power cycle.
+
+Access is neighbor-to-neighbor: registers reach cache, cache reaches main memory, main memory
+reaches the disk — rather than every level reaching all the way down on its own.
 
 <Callout type="note">
-  A **hard-disk drive** stores data magnetically on rigid, rotating platters, organized into
-  tracks and sectors and managed by a disk controller. An **SSD** (solid-state drive) is
-  nonvolatile like a hard disk, built on different underlying technology, and is faster than a
-  hard disk for most workloads.
+  A **hard-disk drive** stores data magnetically on rigid rotating platters, divided into tracks
+  and sectors and run by a disk controller <SlideRef n={19} />. An **SSD** (solid-state drive) is nonvolatile like a
+  hard disk but built on different technology, and is faster for most workloads.
 </Callout>
 
-A related, simpler way to think about access is that each level of the hierarchy typically only
-reaches its immediate neighbor directly — the CPU's registers access cache, cache accesses main
-memory, and main memory accesses the hard disk — rather than every level reaching all the way down
-to disk on its own.
-
-However you measure a piece of data's size, the units are standard: a **bit** is the smallest unit
-(a single 0 or 1), a **byte** is 8 bits, and a **word** is whatever size a particular computer
-architecture's hardware natively works with. Beyond a byte, storage sizes scale up in powers of
-1024: kilobyte (KB), megabyte (MB), gigabyte (GB), terabyte (TB), and petabyte (PB).
+Sizes use standard units <SlideRef n={20} />: a **bit** is one 0 or 1, a **byte** is 8 bits, and a **word** is
+whatever width the architecture works with natively. Beyond a byte, capacity scales in powers of
+1024 — KB, MB, GB, TB, PB.
 
 <StorageHierarchy client:visible />
 
 ## Multiprocessing and Clustered Systems
 
-Not every system runs on a single processor. **Parallel systems** — also called multiprocessor or
-tightly coupled systems — use more than one CPU in close communication, sharing the same computer
-bus and sometimes the same clock, memory, and peripheral devices. Adding processors this way
-brings three real advantages: increased **throughput** (more work gets done per unit time),
-**economy of scale** (multiple processors sharing peripherals, storage, and power supplies costs
-less per processor than separate machines would), and increased **reliability** — if one
-processor fails, the system can degrade gracefully instead of failing completely, continuing to
-run at reduced capacity rather than stopping outright.
+<Lead from={21} to={25}>Add processors — even whole machines — for more throughput, better economy, and higher reliability.</Lead>
 
-There are two ways to organize multiple processors. In **asymmetric multiprocessing**, each
-processor is assigned a specific, predefined task. In **symmetric multiprocessing (SMP)**, by
-contrast, every processor is a peer — each one runs an identical copy of the operating system and
-can perform any of the available tasks, with all processors sharing the same memory. A
-**dual-core design** takes this a step further by placing multiple processor cores on a single
-physical chip, again sharing memory, rather than using multiple separate chips.
+**Parallel systems** (also called multiprocessor or tightly coupled systems) use more than one CPU
+in close communication, sharing the bus and often the clock, memory, and devices <SlideRef n={21} />. Three advantages:
 
-Beyond a single machine, **clustered systems** link together multiple complete computer systems,
-typically sharing storage via a **storage-area network (SAN)**, to provide high-availability
-service that survives the failure of any individual node. Clustering, like multiprocessing, comes
-in an asymmetric form — where one machine sits in **hot-standby** mode, ready to take over if the
-primary fails — and a symmetric form, where multiple nodes all run applications simultaneously and
-monitor each other. Clusters are also used for **high-performance computing (HPC)**, where
-applications are written to explicitly take advantage of parallelization across nodes,
-coordinated by software such as a **distributed lock manager (DLM)** that arbitrates access to
-shared resources across the cluster.
+- **Increased throughput** — more work per unit time.
+
+- **Economy of scale** — sharing peripherals, storage, and power costs less per processor.
+
+- **Increased reliability** — one processor fails, the system **degrades gracefully** instead of stopping.
+
+There are two ways to organize the processors <SlideRef n={22} />:
+
+| Aspect | Asymmetric multiprocessing | Symmetric multiprocessing (SMP) |
+| --- | --- | --- |
+| Processor roles | Each assigned a specific task | Every processor is a peer |
+| OS copies | One master controls the rest | Each processor runs its own copy |
+| Memory | — | All processors share the same memory |
+
+A **dual-core design** takes SMP onto a single chip — multiple **cores** sharing memory, rather
+than multiple separate chips <SlideRef n={23} />.
+
+**Clustered systems** go a step further: multiple *complete* computers work together, usually
+sharing storage over a **storage-area network (SAN)**, to deliver **high-availability** service
+that survives a node failure <SlideRef from={24} to={25} />. Clustering comes in an **asymmetric** form (one node in
+**hot-standby**, ready to take over) and a **symmetric** form (all nodes active, monitoring each
+other). Clusters also power **high-performance computing (HPC)**, coordinated by a **distributed
+lock manager (DLM)** that arbitrates shared-resource access across nodes.
 
 ## Multiprogramming and Multitasking
 
-A single CPU can only truly execute one instruction at a time, but keeping it constantly busy is
-what makes a system efficient — an idle CPU is wasted capacity. **Multiprogramming** solves this
-at the batch-processing level: the operating system keeps several jobs in memory at once, and
-whenever the job currently running has to wait — say, for an I/O operation to complete — the OS
-simply switches the CPU over to another job that's ready to run, rather than letting the CPU sit
-idle. **Job scheduling** is the process of deciding which of the jobs sitting in memory gets the
-CPU next.
+<Lead from={26} to={27}>Never let the CPU sit idle — batch multiprogramming first, then interactive multitasking.</Lead>
 
-**Multitasking** (or **timesharing**) is a direct extension of the same idea, but tuned for
-interactive use: the CPU switches between jobs so frequently that you can interact with each
-program while it runs, with response times of `<1s` that feel immediate. Each user's running
-program is called a **process**. Multiple processes are kept in memory at once via **CPU
-scheduling** (deciding which ready process runs next) and, if memory fills up, **swapping**
-(moving a process temporarily out to disk to make room). **Virtual memory** allows the system to
-run processes that aren't even entirely loaded into memory at once, further stretching how many
-jobs can be handled concurrently.
+A single CPU runs one instruction at a time, so keeping it busy is what makes a system efficient.
+These two techniques are a classic exam distinction:
+
+| Aspect | Multiprogramming (batch) | Multitasking (timesharing) |
+| --- | --- | --- |
+| Main goal | Keep the CPU busy — efficiency | Interactive, live response |
+| Switches when… | The running job has to wait (e.g. for I/O) | So frequently users interact with each job as it runs |
+| Scheduling decision | **Job scheduling** — which job in memory runs | **CPU scheduling** — which ready process runs next |
+| Response time | Not a concern | Feels immediate (`<1s`) |
+
+Supporting vocabulary that rides along with multitasking <SlideRef n={27} />:
+
+- **Process** — a user's program in execution.
+
+- **Swapping** — move a process temporarily out to disk to free memory.
+
+- **Virtual memory** — run processes that aren't even fully loaded into memory.
 
 <Figure
   src="figures/ch01/memory-address-space.svg"
   alt="Memory address space diagram: the operating system and four separate jobs laid out in memory from address 0 up to 512M"
-  caption="Figure 1.3 — A memory address space divided between the operating system and four concurrently loaded jobs, from 0 to 512M."
+  caption="Figure 1.3 — Memory divided between the operating system and four concurrently loaded jobs, from 0 to 512M."
 />
 
 ## Interrupts
 
-An operating system has to react to events as they happen, rather than only doing work it planned
-in advance — and the mechanism it reacts through is the **interrupt**. Interrupts come from two
-directions: a **hardware interrupt** is raised by a device — for example, once it finishes an I/O
-operation — while a **software interrupt** (also called an **exception** or a **trap**) is
-triggered by the currently executing program itself, whether through an error condition (like
-division by zero) or a deliberate request for an operating-system service. Left unmanaged, related
-problems like an infinite loop or one process interfering with another are exactly the kind of
-thing the interrupt mechanism, together with the OS, exists to detect and contain.
+<Lead from={29} to={32}>The OS is interrupt-driven — hardware and software signals divert the CPU to a handler, then it resumes.</Lead>
 
-However it originates, an interrupt is ultimately just a signal. A hardware interrupt is delivered
-by sending a signal to the CPU, usually over the system bus; a software interrupt is delivered by
-executing a special operation called a **system call** (sometimes called a **monitor call**).
-Every computer architecture implements its own version of this mechanism, but a handful of
-functions are common across all of them.
+Interrupts come from two directions <SlideRef n={29} />:
+
+- **Hardware interrupt** — raised by a device (e.g. an I/O operation finishing), delivered as a signal to the CPU over the bus.
+
+- **Software interrupt** — also called a **trap** or **exception**, triggered by the running program itself: an error (like division by zero) or a deliberate request for an OS service (a **system call**).
+
+**How an interrupt is serviced** <SlideRef from={30} to={31} />:
+
+- Control transfers through the **interrupt vector** — a table holding the address of every interrupt service routine.
+
+- Before handing control over, the hardware **saves the address of the interrupted instruction**, so execution resumes exactly where it left off.
 
 <Callout type="note">
-  When an interrupt occurs, control transfers to a fixed location — generally through the
-  **interrupt vector**, a table holding the addresses of every interrupt service routine the
-  system knows about. Before handing control over, the architecture must first save the address
-  of the instruction that was interrupted, so execution can resume from exactly where it left
-  off. A **trap** (or exception) is simply a software-generated interrupt, caused either by an
-  error or by a request for a service. Because of all this, it's fair to say an operating system
-  is fundamentally **interrupt driven**.
+  Because it reacts to events this way, an operating system is fundamentally **interrupt driven**.
+  A **trap** is just a software-generated interrupt — caused by an error or by a request for a
+  service — and it's the mechanism the OS uses to catch problems like an infinite loop or one
+  process interfering with another.
 </Callout>
 
 <InterruptCycle client:visible />
 
 ## Operating-System Operations and Dual Mode
 
-Because the operating system is responsible for protecting itself and every other program on the
-machine from a misbehaving process, hardware provides **dual-mode operation** to keep that
-boundary enforceable. The CPU can execute in one of two modes: **user mode**, in which ordinary
-application code runs, and **kernel mode** — also called supervisor mode, system mode, or
-privileged mode — in which the operating system itself runs, with access to capabilities user
-code isn't allowed to touch.
+<Lead from={33} to={36}>Hardware dual-mode operation lets the OS protect itself and every other program from a misbehaving process.</Lead>
 
-This distinction is implemented in hardware via a single **mode bit**: 0 for kernel mode, 1 for
-user mode. Certain instructions are marked **privileged** and can only execute while the mode bit
-is set to kernel — attempting one in user mode is rejected. A **system call** is how a user
-program deliberately switches the mode bit to kernel mode so the operating system can perform a
-privileged operation on its behalf; when that operation finishes and control returns to the user
-program, the mode bit resets back to user mode.
+The CPU runs in one of two modes, tracked by a single hardware **mode bit** <SlideRef n={34} />:
+
+| Aspect | User mode | Kernel mode |
+| --- | --- | --- |
+| Mode bit | `1` | `0` |
+| What runs | Application code | The operating system itself |
+| Privileged instructions | ✗ Rejected (traps) | ✓ Allowed |
+| Also called | — | Supervisor / system / privileged mode |
+
+- **Privileged instructions** execute only in kernel mode; attempting one in user mode traps <SlideRef n={35} />.
+
+- A **system call** is how user code deliberately flips the mode bit to kernel, so the OS can do a privileged operation on its behalf — then the bit flips back on return.
 
 <Figure
   src="figures/ch01/mode-transition.svg"
   alt="Diagram of the transition from user mode to kernel mode: a user process executes, calls a system call which traps and sets the mode bit to kernel, the kernel executes the system call, then returns and resets the mode bit to user"
-  caption="Figure 1.4 — Transitioning from user mode to kernel mode and back: a system call traps into the kernel, then returns and resets the mode bit."
+  caption="Figure 1.4 — A system call traps into the kernel, then returns and resets the mode bit to user."
 />
 
-Above the kernel, a **shell** provides the actual user interface to the system, whether as a
-graphical interface or a command-line interface. The kernel underneath is generally organized
-into a handful of core responsibility areas: process management, memory management, storage
-management, the file system, CPU scheduling, I/O management, and networking and security.
+Above the kernel sits the **shell** — the user interface, whether GUI or command line <SlideRef n={36} />. The kernel
+itself is organized into **seven** core responsibility areas: process management, memory
+management, storage management, the file system, CPU scheduling, I/O management, and networking &
+security.
 
 ## Kernel Data Structures
 
-A kernel spends most of its time tracking things — running processes, open files, free memory
-blocks — and it leans on a small set of standard data structures to do it efficiently, the same
-ones you'd meet in any data-structures course. A **linked list** stores elements in sequence via
-pointers rather than contiguous memory: a **singly linked list** links each element only to the
-next, a **doubly linked list** links each element to both its neighbors (letting you traverse in
-either direction), and a **circular linked list** links its last element back to its first,
-forming a loop with no fixed end.
+<Lead from={37} to={39}>The kernel tracks its own state with the same standard structures you'd meet in any data-structures course.</Lead>
 
-For data that benefits from ordering, kernels reach for a **binary search tree**: a structure
-where every node's left child holds a value less than or equal to the node's own value, and its
-right child holds a value greater than it. Searching an arbitrary binary search tree takes O(n)
-time in the worst case, but a **balanced** binary search tree keeps that search down to O(lg n) by
-ensuring the tree never grows lopsided.
+- **Linked lists** <SlideRef n={37} /> — elements chained by pointers: **singly** (each links to the next), **doubly** (links to both neighbors), **circular** (last links back to first).
 
-Two more structures round out the kernel's toolkit: a **hash function** maps data to a **hash
-map**, giving near-constant-time lookup by key rather than needing to search; and a **bitmap** is
-simply a string of n binary digits, each one representing the on/off status of one of n items — a
-compact way to track, say, which blocks of a disk are currently free.
+- **Binary search tree** <SlideRef n={38} /> — every node's left child ≤ the node ≤ its right child. Search is O(n) worst case, but a **balanced** BST keeps it to **O(lg n)**.
 
-The Linux kernel actually ships real, minimal versions of exactly these structures, in the headers
-the slide points you to directly:
+- **Hash map** <SlideRef n={39} /> — a hash function maps a key to a slot for near-constant-time lookup.
+
+- **Bitmap** <SlideRef n={39} /> — a string of *n* bits, each recording the on/off status of one item (e.g. which disk blocks are free).
+
+The Linux kernel ships real, minimal versions of exactly these, in the headers the slide points to:
 
 ```c title="linux-kernel-data-structures.c" {2,10,18}
 // <linux/list.h> — the doubly linked list every kernel subsystem embeds
@@ -306,10 +292,6 @@ struct rb_node {
   struct rb_node *rb_left;
 };
 
-struct rb_root {
-  struct rb_node *rb_node;
-};
-
 // <linux/kfifo.h> — the generic ring-buffer FIFO
 struct __kfifo {
   unsigned int in, out;   // write/read positions
@@ -320,24 +302,18 @@ struct __kfifo {
 ```
 
 <Callout type="note">
-  Notice that `list_head` and `rb_node` don't hold a payload themselves — they're embedded
-  directly inside the struct that owns the data, rather than the owning struct holding a pointer
-  to a separate container. This is a well-known Linux kernel idiom called an **intrusive data
-  structure**: the list/tree machinery lives right next to the data it organizes, so the kernel
-  doesn't need a second allocation just to link something into a list.
+  Notice `list_head` and `rb_node` hold no payload of their own — they're embedded directly
+  inside the struct that owns the data. This is a Linux idiom called an **intrusive data
+  structure**: the list/tree machinery lives next to the data it organizes, so the kernel avoids a
+  second allocation just to link something into a list.
 </Callout>
 
 <Callout type="key">
-  **Key takeaways:** an operating system is the one program always running on a machine — the
-  **kernel** — acting simultaneously as a **resource allocator** and a **control program**.
-  Hardware organizes itself around a shared bus connecting CPUs, device controllers, and memory,
-  and boots via a firmware-stored **bootstrap program**. Storage is layered into a **hierarchy**
-  from fast, volatile registers and cache down to slow, nonvolatile tape. Systems scale up
-  through **multiprocessing** and **clustering**, and scale their CPU's utilization through
-  **multiprogramming** and **multitasking**. The CPU stays responsive to the outside world
-  through **interrupts**, delivered via the **interrupt vector** to an interrupt service routine,
-  and protects itself from user code through **dual-mode operation** enforced by a hardware
-  **mode bit**. Underneath it all, the kernel tracks its own state using the same standard data
-  structures — linked lists, balanced trees, hash maps, and bitmaps — that the Linux kernel
-  itself ships in its own headers.
+  **Key takeaways:** the OS is the one program always running — the **kernel** — acting at once as
+  **resource allocator** and **control program**. Hardware organizes around a shared **bus**
+  linking CPUs, controllers, and memory, and boots via a firmware **bootstrap program**. Storage
+  is a **hierarchy** split by the **volatile / nonvolatile** line. Systems scale out through
+  **multiprocessing** and **clustering**, and scale CPU use through **multiprogramming** and
+  **multitasking**. The CPU stays responsive through **interrupts** (via the **interrupt vector**)
+  and protects itself with **dual-mode** operation enforced by a hardware **mode bit**.
 </Callout>
