@@ -5,7 +5,7 @@
   // localStorage so a session can be resumed. No backend, no server state.
   import { onMount } from 'svelte';
 
-  let { questions = [], chapter = 'introduction' } = $props();
+  let { questions = [], chapter = 'introduction', chapterLabel = 'Chapter 1' } = $props();
 
   const SESSION_KEY = `os-exam-${chapter}-session`;
 
@@ -281,7 +281,7 @@
 <section class="quiz" aria-live="polite">
   {#if phase === 'setup'}
     <header class="quiz__head">
-      <p class="eyebrow">Exam mode · Chapter 1</p>
+      <p class="eyebrow">Exam mode · {chapterLabel}</p>
 
       <h2 class="quiz__title">Practice questions</h2>
 

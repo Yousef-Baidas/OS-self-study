@@ -1,0 +1,290 @@
+[
+  {
+    "id": "ch02-q01",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system services",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "Operating-system services split into two groups. Which pair names them correctly?",
+    "choices": [
+      "User-helpful and system-helpful",
+      "Kernel-mode and user-mode",
+      "Volatile and nonvolatile",
+      "Synchronous and asynchronous"
+    ],
+    "answer": 0,
+    "solution": "The slides divide OS services into those (a) helpful to the user — user interface, program execution, I/O, file-system manipulation, communications, error detection — and (b) helpful to the system itself — resource allocation, accounting, and protection & security.",
+    "source": "Lecture slide 3"
+  },
+  {
+    "id": "ch02-q02",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system services",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "Error detection is classified as a service that is helpful to the user.",
+    "answer": "true",
+    "solution": "True. Error detection sits in the user-helpful group: the OS stays aware of errors in the CPU, memory, I/O devices, and user programs and takes appropriate action, with debugging facilities to help. Resource allocation, accounting, and protection & security are the system-helpful services.",
+    "source": "Lecture slides 3, 14"
+  },
+  {
+    "id": "ch02-q03",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system services",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which of the following is a service that is helpful to the system, not directly to the user?",
+    "choices": ["Program execution", "File-system manipulation", "Resource allocation", "I/O operations"],
+    "answer": 2,
+    "solution": "Resource allocation — dividing CPU cycles, memory, storage, and I/O among concurrent users and jobs — is a system-helpful service. Program execution, file-system manipulation, and I/O operations are all user-helpful.",
+    "source": "Lecture slides 3, 15"
+  },
+  {
+    "id": "ch02-q04",
+    "chapter": "operating-system-structures",
+    "topic": "The user interface",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "The desktop metaphor used by modern graphical user interfaces was invented at:",
+    "choices": ["Bell Labs", "Xerox PARC", "MIT", "IBM Research"],
+    "answer": 1,
+    "solution": "The GUI desktop metaphor — icons representing files, programs, and actions, driven by a pointing device — was invented at Xerox PARC.",
+    "source": "Lecture slide 7"
+  },
+  {
+    "id": "ch02-q05",
+    "chapter": "operating-system-structures",
+    "topic": "The user interface",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "When a shell's commands are just the names of programs (rather than built in), adding a new command requires modifying the shell.",
+    "answer": "false",
+    "solution": "False. When commands are the names of programs, adding a new feature does NOT require changing the shell — you just add a program the shell can find and run. Only built-in commands are part of the shell itself.",
+    "source": "Lecture slide 5"
+  },
+  {
+    "id": "ch02-q06",
+    "chapter": "operating-system-structures",
+    "topic": "System calls",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "What happens to the CPU when a running program makes a system call?",
+    "choices": [
+      "It stays in user mode the whole time",
+      "It switches from user mode to kernel mode, then back",
+      "It shuts down until the call completes",
+      "It switches permanently to kernel mode"
+    ],
+    "answer": 1,
+    "solution": "A system call switches the CPU from user mode to kernel mode (a context switch) so the kernel can perform the privileged operation, then switches back to user mode when the call returns.",
+    "source": "Lecture slide 22"
+  },
+  {
+    "id": "ch02-q07",
+    "chapter": "operating-system-structures",
+    "topic": "System calls",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "Which API is used by UNIX, Linux, and macOS?",
+    "choices": ["Win32 API", "POSIX API", "Java API", "Cocoa API"],
+    "answer": 1,
+    "solution": "The POSIX API covers virtually all versions of UNIX, Linux, and macOS. Win32 is the Windows API, and the Java API targets the Java Virtual Machine.",
+    "source": "Lecture slide 23"
+  },
+  {
+    "id": "ch02-q08",
+    "chapter": "operating-system-structures",
+    "topic": "System calls",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Programs usually call a high-level API (like the C library's read()) instead of invoking the system call directly. The main benefit is:",
+    "choices": [
+      "Faster raw execution than the system call",
+      "Portability and decoupling the program from kernel specifics",
+      "It avoids the kernel entirely",
+      "It gives the program access to more CPU registers"
+    ],
+    "answer": 1,
+    "solution": "The API is the function you call in your code; it in turn invokes the real system call. Programming to the API keeps your code decoupled from kernel details and makes it portable across systems that offer the same API.",
+    "source": "Lecture slide 23"
+  },
+  {
+    "id": "ch02-q09",
+    "chapter": "operating-system-structures",
+    "topic": "System-call parameter passing",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which parameter-passing method stores the parameters in a memory block and passes the block's address in a register (as Linux and Solaris do)?",
+    "choices": ["Registers", "Block / table", "Stack", "Interrupt vector"],
+    "answer": 1,
+    "solution": "In the block (table) method, parameters are stored in a block in memory and the address of that block is passed in a register. Linux and Solaris use this approach; unlike plain registers, it doesn't limit the number or length of parameters.",
+    "source": "Lecture slide 26"
+  },
+  {
+    "id": "ch02-q10",
+    "chapter": "operating-system-structures",
+    "topic": "System-call parameter passing",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which parameter-passing method does Windows use, with the program pushing parameters that the OS then pops?",
+    "choices": ["Registers", "Block / table", "Stack", "Cache lines"],
+    "answer": 2,
+    "solution": "The stack method has the program push parameters onto the stack; the operating system pops them off. Windows uses this. Like the block method, it isn't limited by the number of available registers.",
+    "source": "Lecture slide 26"
+  },
+  {
+    "id": "ch02-q11",
+    "chapter": "operating-system-structures",
+    "topic": "System-call categories",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "The calls fork(), exit(), and wait() belong to which system-call category?",
+    "choices": ["File management", "Process control", "Device management", "Communications"],
+    "answer": 1,
+    "solution": "Creating and terminating processes, loading and executing programs, waiting for events, and allocating memory are all process control. File management covers open/read/write; device management covers request/release/read/write of devices.",
+    "source": "Lecture slide 29"
+  },
+  {
+    "id": "ch02-q12",
+    "chapter": "operating-system-structures",
+    "topic": "System-call categories",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Getting the time or date, or reading and setting system data, falls into which category of system call?",
+    "choices": ["Information maintenance", "Device management", "Process control", "File management"],
+    "answer": 0,
+    "solution": "Information maintenance covers getting/setting the time or date, getting/setting system data, and querying or setting process, file, and device attributes.",
+    "source": "Lecture slide 32"
+  },
+  {
+    "id": "ch02-q13",
+    "chapter": "operating-system-structures",
+    "topic": "fork(), exec(), and wait()",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "After a successful fork(), what value does the call return in the child process?",
+    "choices": ["The child's PID", "0", "-1", "The parent's PID"],
+    "answer": 1,
+    "solution": "fork() returns twice: 0 in the child, and the child's PID in the parent. That difference in return value is exactly how each process knows which one it is (the basis for the if (pid == 0) split).",
+    "source": "Lecture slide 36"
+  },
+  {
+    "id": "ch02-q14",
+    "chapter": "operating-system-structures",
+    "topic": "fork(), exec(), and wait()",
+    "type": "numeric",
+    "difficulty": "easy",
+    "prompt": "By convention, what exit code does a UNIX process return to indicate that it finished with no error?",
+    "answer": 0,
+    "solution": "An exit code of 0 means no error. Any code greater than 0 is an error code that the parent can read from wait().",
+    "source": "Lecture slide 36"
+  },
+  {
+    "id": "ch02-q15",
+    "chapter": "operating-system-structures",
+    "topic": "fork(), exec(), and wait()",
+    "type": "short",
+    "difficulty": "medium",
+    "prompt": "In one sentence, distinguish what fork() does from what exec() does.",
+    "answer": "fork() creates a new process as a copy of the caller, while exec() replaces a process's memory image with a new program.",
+    "solution": "fork() clones the calling process, producing a parent and a near-identical child. exec() then loads a different program into the child, replacing its memory image — which is why exec() never returns on success.",
+    "source": "Lecture slide 36"
+  },
+  {
+    "id": "ch02-q16",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system structure",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which OS structure moves as much as possible out of the kernel into user space, with modules communicating by message passing?",
+    "choices": ["Monolithic", "Layered", "Microkernel", "Modular"],
+    "answer": 2,
+    "solution": "A microkernel keeps the kernel minimal (mainly inter-process communication) and pushes services like the file server and device drivers into user space, where they communicate by message passing through the microkernel. Mach is the classic example.",
+    "source": "Lecture slide 45"
+  },
+  {
+    "id": "ch02-q17",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system structure",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "What is the main drawback of a microkernel design?",
+    "choices": [
+      "It is impossible to port to new architectures",
+      "Performance overhead from user-space to kernel-space message passing",
+      "It cannot be extended with new services",
+      "It runs every service in kernel mode"
+    ],
+    "answer": 1,
+    "solution": "Microkernels are easier to extend, port, and secure (less code runs in kernel mode), but the cost is performance overhead: services now communicate across the user/kernel boundary by message passing instead of direct calls.",
+    "source": "Lecture slide 45"
+  },
+  {
+    "id": "ch02-q18",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system structure",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "The Linux kernel is a pure monolithic design with no support for loadable modules.",
+    "answer": "false",
+    "solution": "False. Linux is monolithic PLUS modular — it runs in a single kernel address space but supports loadable kernel modules for dynamic functionality. Most modern kernels are hybrids of several structures.",
+    "source": "Lecture slides 43, 48"
+  },
+  {
+    "id": "ch02-q19",
+    "chapter": "operating-system-structures",
+    "topic": "System programs",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Background services (daemons) are best described as:",
+    "choices": [
+      "Programs the user runs interactively in the foreground",
+      "Programs launched at boot — some run from boot to shutdown, providing facilities like disk checking, logging, and printing",
+      "Entries in the kernel's interrupt vector",
+      "System calls in the communications category"
+    ],
+    "answer": 1,
+    "solution": "Background services launch at boot time. Some run only for system startup and then terminate; others run from boot to shutdown, providing facilities such as disk checking, process scheduling, error logging, and printing.",
+    "source": "Lecture slide 38"
+  },
+  {
+    "id": "ch02-q20",
+    "chapter": "operating-system-structures",
+    "topic": "System boot",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "What firmware interface has replaced the traditional BIOS in modern systems?",
+    "choices": ["GRUB", "UEFI", "POSIX", "EEPROM"],
+    "answer": 1,
+    "solution": "Modern systems replace the BIOS with UEFI (Unified Extensible Firmware Interface). GRUB is a common bootstrap loader (which selects and loads the kernel); EEPROM is a type of firmware storage, not the interface.",
+    "source": "Lecture slide 54"
+  },
+  {
+    "id": "ch02-q21",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system debugging",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "A failure of the operating system itself can generate which kind of dump, and what does it contain?",
+    "choices": [
+      "A core dump containing the kernel's memory",
+      "A crash dump containing kernel memory",
+      "A core dump containing a single process's memory",
+      "A crash dump containing one process's memory"
+    ],
+    "answer": 1,
+    "solution": "An OS failure generates a crash dump containing kernel memory. A core dump is the counterpart for an application failure — it captures that single process's memory.",
+    "source": "Lecture slide 55"
+  },
+  {
+    "id": "ch02-q22",
+    "chapter": "operating-system-structures",
+    "topic": "Operating-system debugging",
+    "type": "short",
+    "difficulty": "medium",
+    "prompt": "What is profiling, as used in performance tuning?",
+    "answer": "Profiling periodically samples the instruction pointer to look for statistical trends in where a program spends its time.",
+    "solution": "Profiling is periodic sampling of the instruction pointer to reveal statistical trends — for example, which functions consume the most time — so bottlenecks can be found and tuned. Trace listings, which record activity for later analysis, are a related technique.",
+    "source": "Lecture slide 55"
+  }
+]

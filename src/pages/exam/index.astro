@@ -1,25 +1,61 @@
 ---
-// Exam mode (D-06). Loads the Chapter 1 question bank from the `questions`
-// collection and hands it to the QuizRunner island. client:only="svelte" because
-// the runner reads/writes localStorage (resume + last score) — server-rendering a
-// progress UI that can only be correct on the client would flash wrong content.
+// Exam mode (D-06). Loads every chapter's question bank from the `questions`
+// collection, groups the questions by chapter, and hands the groups to the
+// ExamShell island — a chapter switcher wrapping the per-chapter QuizRunner.
+// client:only="svelte" because the runner reads/writes localStorage (resume +
+// last score) — server-rendering a progress UI that can only be correct on the
+// client would flash wrong content.
 import Layout from '../../components/Layout.astro';
 
-import QuizRunner from '../../widgets/exam/QuizRunner.svelte';
+import ExamShell from '../../widgets/exam/ExamShell.svelte';
 
 import { getCollection } from 'astro:content';
 
 import { joinBase } from '../../lib/withBase';
 
-const CHAPTER = 'introduction';
+const [questionEntries, chapterEntries] = await Promise.all([
+  getCollection('questions'),
 
-const all = await getCollection('questions');
+  getCollection('chapters'),
+]);
 
-// Filter to this chapter and strip the collection reference — the island only
-// needs the plain question fields, serialized across the island boundary.
-const questions = all
-  .filter((entry) => entry.data.chapter.id === CHAPTER)
-  .map((entry) => ({
+// number + title per chapter slug, so each group can label and order itself.
+const chapterMeta = new Map(
+  chapterEntries.map((entry) => [entry.id, { number: entry.data.number, title: entry.data.title }]),
+);
+
+// The plain question shape the island consumes (no collection reference).
+type IslandQuestion = {
+  id: string;
+
+  topic: string;
+
+  type: string;
+
+  difficulty: string;
+
+  prompt: string;
+
+  choices: string[] | null;
+
+  answer: number | string;
+
+  solution: string;
+
+  source: string;
+};
+
+// Group questions by their chapter slug, stripping the collection reference —
+// the island only needs the plain question fields, serialized across the boundary.
+const byChapter = new Map<string, IslandQuestion[]>();
+
+for (const entry of questionEntries) {
+
+  const slug = entry.data.chapter.id;
+
+  const list = byChapter.get(slug) ?? [];
+
+  list.push({
     id: entry.data.id,
 
     topic: entry.data.topic,
@@ -37,17 +73,32 @@ const questions = all
     solution: entry.data.solution,
 
     source: entry.data.source,
-  }))
-  .sort((a, b) => a.id.localeCompare(b.id));
+  });
 
-const chaptersHref = joinBase(import.meta.env.BASE_URL, `chapters/${CHAPTER}`);
+  byChapter.set(slug, list);
+}
+
+// One group per chapter, questions sorted by id, groups sorted by chapter number.
+const groups = [...byChapter.entries()]
+  .map(([slug, questions]) => ({
+    slug,
+
+    number: chapterMeta.get(slug)?.number ?? Number.MAX_SAFE_INTEGER,
+
+    title: chapterMeta.get(slug)?.title ?? slug,
+
+    questions: questions.sort((a, b) => a.id.localeCompare(b.id)),
+  }))
+  .sort((a, b) => a.number - b.number);
+
+const chaptersHref = joinBase(import.meta.env.BASE_URL, 'chapters/introduction');
 ---
 
 <Layout title="Exam mode — OS-self-study">
   <div class="exam-page">
     {
-      questions.length > 0 ? (
-        <QuizRunner client:only="svelte" questions={questions} chapter={CHAPTER} />
+      groups.length > 0 ? (
+        <ExamShell client:only="svelte" groups={groups} />
       ) : (
         <div class="empty-state">
           <h1>No questions yet</h1>
