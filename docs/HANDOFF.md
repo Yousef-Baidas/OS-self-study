@@ -13,7 +13,7 @@ GitHub Pages (base path `/OS-self-study/`). Toolchain: Bun. Author + classmates 
 **Core value:** distilled lecture notes + interactive sims that make an OS concept click faster than
 re-reading the slides. Every claim cites its source slide so a student can jump to the deck.
 
-## Current state (2026-07-17)
+## Current state (2026-07-19)
 
 - **Chapter 1 (Introduction)** — complete, live at `/chapters/introduction`. Rewritten from dense
   prose into scannable lecture notes: section `<Lead>` essences, comparison tables for every
@@ -26,9 +26,22 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   reused twice via a `dataset` prop), `OsStructureExplorer` (segmented control across all five
   structures with three render modes), `SyscallJourney` (SimFrame stepper flipping the mode bit
   through fork→exec→wait). Two inline figures (`services-view`, `syscall-parameter-passing`).
-- **Design system** — elevated to a "shadcn look" on the existing token stack (no Tailwind). Notes
-  components: `SlideRef.astro` (citation pill), `Lead.astro` (section essence). Comparison-table,
-  definition-list, and figure (`.fg-*`) styling in `src/styles/global.css`, scoped to `.chapter-prose`.
+- **Design system** — **warm-paper + deep-teal** identity (reskinned 2026-07-19 to match the sibling
+  `prob-self-study` site's warm family, with its own teal/pine accent instead of prob-web's rust).
+  Light = warm paper `#f6f1e7` / cream surfaces; dark = warm espresso `#16120e`; accent `#0d6b60`
+  (light) / `#35b6a6` (dark). Rounder radii (8/12/16), warm-tinted shadows, bolder display type,
+  fluid hero. Built on the existing token stack (no Tailwind). Key token: **`--color-accent-ink`**
+  (text/glyph colour that sits ON the accent fill — near-white in light, deep espresso-teal in dark)
+  — always use it instead of hardcoded `#fff` on an accent-filled button, or dark-mode contrast fails
+  against the bright teal. Callouts / exam feedback / review items / sidebar-active use full tinted
+  borders + washes (no side-stripes). Notes components: `SlideRef.astro` (citation pill), `Lead.astro`
+  (section essence). Comparison-table, definition-list, and figure (`.fg-*`) styling in
+  `src/styles/global.css`, scoped to `.chapter-prose`.
+- **Motion** — a small **GSAP** layer on the home page only (`src/pages/index.astro` module script):
+  a hero entrance stagger + a batched card scroll-reveal, gated behind
+  `gsap.matchMedia('(prefers-reduced-motion: no-preference)')`. Resting state is fully visible, so
+  no-JS / reduced-motion / headless never ships blank. GSAP is scoped to the landing bundle; chapter
+  and exam pages stay motion-light.
 - **Exam mode** — live at `/exam`, now **multi-chapter**. `ExamShell.svelte` wraps the per-chapter
   `QuizRunner.svelte` engine with a chapter switcher (a native `<select>`); picking a chapter
   remounts the runner via `{#key}` so its `onMount` re-reads that chapter's own localStorage
@@ -80,4 +93,7 @@ hard-refresh to beat the Pages cache after a deploy.
 - **Verifying sims/exam in-browser**: Svelte 5 delegated click handlers don't fire from synthetic
   `dispatchEvent` — use real clicks (Playwright `.click()`). Native `<select>` change events are not
   delegated and do work via dispatch. The `<astro-dev-toolbar>` at bottom-center is dev-only.
+- **`astro.config.mjs` edits need a dev-server restart** (not hot-reloaded) — e.g. the
+  Expressive-Code `styleOverrides.textMarkers` that retint highlighted code lines to the teal accent.
+  `styleOverrides` values accept `var(--token)`, so code-block chrome stays theme-aware.
 - `.planning/` is gitignored GSD legacy; ignore it.
