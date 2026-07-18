@@ -879,8 +879,6 @@
   .feedback {
     border: 1px solid var(--color-border);
 
-    border-left-width: 3px;
-
     border-radius: var(--radius-md);
 
     padding: var(--space-md);
@@ -895,13 +893,13 @@
   }
 
   .feedback--ok {
-    border-left-color: var(--color-success);
+    border-color: color-mix(in srgb, var(--color-success) 40%, var(--color-border));
 
     background: var(--color-success-wash);
   }
 
   .feedback--bad {
-    border-left-color: var(--color-destructive);
+    border-color: color-mix(in srgb, var(--color-destructive) 40%, var(--color-border));
 
     background: var(--color-destructive-wash);
   }
@@ -985,7 +983,7 @@
 
     background: var(--color-accent);
 
-    color: #ffffff;
+    color: var(--color-accent-ink);
 
     font-family: var(--font-sans);
 
@@ -1124,13 +1122,13 @@
   }
 
   .miss {
-    border: 1px solid var(--color-border);
-
-    border-left: 3px solid var(--color-destructive);
+    border: 1px solid color-mix(in srgb, var(--color-destructive) 40%, var(--color-border));
 
     border-radius: var(--radius-md);
 
     padding: var(--space-md);
+
+    background: var(--color-destructive-wash);
 
     display: flex;
 

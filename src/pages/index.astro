@@ -70,7 +70,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </div>
   </section>
 
-  <section class="chapters reveal" style="--i: 4" aria-labelledby="chapters-heading">
+  <section class="chapters" aria-labelledby="chapters-heading">
     <div class="section-head">
       <p class="eyebrow" id="chapters-heading">Chapters</p>
 
@@ -84,7 +84,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
           return (
             <li>
-              <a class="card" href={joinBase(import.meta.env.BASE_URL, `chapters/${chapter.slug}`)}>
+              <a class="card js-card" href={joinBase(import.meta.env.BASE_URL, `chapters/${chapter.slug}`)}>
                 <span class="card__num eyebrow">{pad(chapter.number)}</span>
 
                 <span class="card__body">
@@ -121,8 +121,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </ul>
   </section>
 
-  <section class="exam reveal" style="--i: 5">
-    <a class="exam-card" href={examHref}>
+  <section class="exam">
+    <a class="exam-card js-card" href={examHref}>
       <span class="exam-card__text">
         <span class="eyebrow">Exam mode</span>
 
@@ -148,6 +148,65 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </a>
   </section>
 </Layout>
+
+<script>
+  // A little GSAP motion, scoped to this landing page (a brand surface). Kept
+  // deliberately restrained: one hero entrance + a scroll reveal for the cards.
+  import { gsap } from 'gsap';
+
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  // matchMedia reverts every tween/ScrollTrigger it creates when the query stops
+  // matching — so users who prefer reduced motion get no animation at all, and
+  // the untouched resting state (fully visible) is what they see.
+  const mm = gsap.matchMedia();
+
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    // Hero — a quick choreographed entrance. from() animates *to* the visible
+    // resting state, so if this script never runs the hero is simply there.
+    gsap.from('.hero .reveal', {
+      y: 18,
+
+      autoAlpha: 0,
+
+      duration: 0.6,
+
+      ease: 'power3.out',
+
+      stagger: 0.09,
+
+      delay: 0.05,
+    });
+
+    // Chapter + exam cards — reveal as they scroll into view, in batched groups.
+    // The hidden start state is set here (inside the motion gate) rather than in
+    // CSS, so it only ever applies when motion is actually going to play.
+    gsap.set('.js-card', { y: 22, autoAlpha: 0 });
+
+    ScrollTrigger.batch('.js-card', {
+      start: 'top 88%',
+
+      once: true,
+
+      onEnter: (batch) =>
+        gsap.to(batch, {
+          y: 0,
+
+          autoAlpha: 1,
+
+          duration: 0.5,
+
+          ease: 'power2.out',
+
+          stagger: 0.08,
+
+          overwrite: true,
+        }),
+    });
+  });
+</script>
 
 <style>
   /* ---- Hero ---- */
@@ -177,6 +236,12 @@ const pad = (n: number) => String(n).padStart(2, '0');
     margin: var(--space-sm) 0 var(--space-md);
 
     max-width: 16ch;
+
+    font-size: var(--font-size-hero);
+
+    font-weight: var(--font-weight-bold);
+
+    letter-spacing: -0.03em;
   }
 
   .hero__tagline {
@@ -223,13 +288,13 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
     background: var(--color-accent);
 
-    color: #ffffff;
+    color: var(--color-accent-ink);
 
     font-weight: var(--font-weight-semibold);
 
     text-decoration: none;
 
-    box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--color-accent) 70%, transparent);
+    box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--color-accent) 55%, transparent);
 
     transition:
       transform 0.15s ease,
@@ -448,26 +513,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
     transform: translateX(3px);
   }
 
-  /* ---- Staggered load-in (disabled under prefers-reduced-motion via tokens.css) ---- */
-  .reveal {
-    opacity: 0;
-
-    animation: reveal-up 0.5s ease forwards;
-
-    animation-delay: calc(var(--i) * 70ms);
-  }
-
-  @keyframes reveal-up {
-    from {
-      opacity: 0;
-
-      transform: translateY(8px);
-    }
-
-    to {
-      opacity: 1;
-
-      transform: none;
-    }
-  }
+  /* Entrance motion is GSAP-driven (see the module script below) and gated on
+     prefers-reduced-motion. The resting state of every element is fully visible,
+     so with no JS / reduced motion / a headless renderer the page simply shows
+     its content unanimated — nothing is ever gated behind a transition. */
 </style>

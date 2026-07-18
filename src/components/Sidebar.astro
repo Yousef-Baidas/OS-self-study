@@ -246,7 +246,7 @@ const chapters = sortChapters(chapterMetas);
 
     padding: var(--space-sm) var(--space-md);
 
-    border-left: 2px solid transparent;
+    border-radius: var(--radius-sm);
 
     color: var(--color-text);
 
@@ -255,20 +255,30 @@ const chapters = sortChapters(chapterMetas);
     line-height: 1.4;
 
     text-decoration: none;
+
+    transition:
+      color 0.15s ease,
+      background 0.15s ease;
   }
 
   .sidebar-link:hover {
     color: var(--color-accent-hover);
 
-    background: var(--color-bg);
+    background: var(--color-surface-raised);
   }
 
+  /* Active chapter — a soft accent wash + accent text instead of a side stripe,
+     which reads cleaner in the narrow rail and matches the warm palette. */
   .sidebar-link--active {
-    border-left-color: var(--color-accent);
+    background: var(--color-accent-wash);
 
     color: var(--color-accent);
 
     font-weight: var(--font-weight-semibold);
+  }
+
+  .sidebar-link--active:hover {
+    background: var(--color-accent-wash-strong);
   }
 
   /* Mobile chapters drawer (D-14) — a separate class from .sidebar (not a
@@ -368,17 +378,21 @@ const chapters = sortChapters(chapterMetas);
 
     border: none;
 
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 
     background: transparent;
 
     color: var(--color-text);
 
     cursor: pointer;
+
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
   }
 
   .drawer-close:hover {
-    background: var(--color-bg);
+    background: var(--color-surface-raised);
 
     color: var(--color-accent-hover);
   }
@@ -390,7 +404,7 @@ const chapters = sortChapters(chapterMetas);
 
     z-index: 55;
 
-    background: rgba(15, 23, 42, 0.5);
+    background: var(--color-scrim);
 
     opacity: 0;
 

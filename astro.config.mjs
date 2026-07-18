@@ -34,6 +34,15 @@ export default defineConfig({
 
         borderColor: 'var(--color-border)',
 
+        // Highlighted lines pick up the teal accent (via theme-aware CSS vars)
+        // instead of Expressive Code's default cool blue, which clashed with the
+        // warm palette. var() values are resolved the same way borderColor is.
+        textMarkers: {
+          markBackground: 'var(--color-accent-wash-strong)',
+
+          markBorderColor: 'var(--color-accent)',
+        },
+
         frames: {
           // Elevation is applied by global.css (.expressive-code .frame) so it
           // stays theme-aware; disable the plugin's own shadow to avoid doubling.
