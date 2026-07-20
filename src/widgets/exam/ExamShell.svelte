@@ -9,10 +9,14 @@
 
   import QuizRunner from './QuizRunner.svelte';
 
+  import { createProgressStore } from '../../lib/progress-store';
+
   let { groups = [] } = $props();
 
-  // Remembers the chapter a student last practised, so they return to it.
-  const CHAPTER_KEY = 'os-exam-chapter';
+  // Remembers which chapter a student last practised, so they return to it. The store
+  // owns the key and the storage-unavailable case; this component only decides whether
+  // a restored slug is still one we can show.
+  const store = createProgressStore();
 
   // Default to the first (lowest-numbered) chapter; onMount may restore the last.
   let selected = $state(groups[0]?.slug ?? '');
@@ -21,17 +25,12 @@
 
   onMount(() => {
 
+    const saved = store.loadChapter();
+
     // Restore the last-practised chapter, but only if it still exists.
-    try {
+    if (saved && groups.some((group) => group.slug === saved)) {
 
-      const saved = localStorage.getItem(CHAPTER_KEY);
-
-      if (saved && groups.some((group) => group.slug === saved)) {
-
-        selected = saved;
-      }
-    } catch (_) {
-      /* storage unavailable — fall back to the default chapter */
+      selected = saved;
     }
   });
 
@@ -39,12 +38,7 @@
 
     selected = slug;
 
-    try {
-
-      localStorage.setItem(CHAPTER_KEY, slug);
-    } catch (_) {
-      /* storage unavailable — selection still works in-memory */
-    }
+    store.saveChapter(slug);
   }
 </script>
 

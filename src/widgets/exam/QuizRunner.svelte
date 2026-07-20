@@ -5,11 +5,13 @@
   // localStorage so a session can be resumed. No backend, no server state.
   import { onMount } from 'svelte';
 
+  import { createProgressStore } from '../../lib/progress-store';
+
   let { questions = [], chapter = 'introduction', chapterLabel = 'Chapter 1' } = $props();
 
-  const SESSION_KEY = `os-exam-${chapter}-session`;
-
-  const LAST_KEY = `os-exam-${chapter}-last`;
+  // Progress persistence lives behind one module: it owns this chapter's localStorage
+  // keys, the JSON round-trip, and the case where storage is simply unavailable.
+  const store = createProgressStore();
 
   const byId = new Map(questions.map((q) => [q.id, q]));
 
@@ -178,7 +180,7 @@
 
     phase = 'results';
 
-    persist(LAST_KEY, result);
+    store.saveLastResult(chapter, result);
 
     clearSession();
   }
@@ -197,28 +199,10 @@
 
   // ---- persistence (session is saved only when the current question is fresh,
   // so `answers.length === index` always holds on resume — no double counting) ----
-  function persist(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (_) {
-      /* storage unavailable — degrade to in-memory only */
-    }
-  }
-
-  function read(key) {
-    try {
-      const raw = localStorage.getItem(key);
-
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
   function saveSession() {
     if (phase !== 'quiz') return;
 
-    persist(SESSION_KEY, {
+    store.saveSession(chapter, {
       queueIds: queue.map((q) => q.id),
 
       index,
@@ -232,11 +216,7 @@
   }
 
   function clearSession() {
-    try {
-      localStorage.removeItem(SESSION_KEY);
-    } catch (_) {
-      /* ignore */
-    }
+    store.clearSession(chapter);
 
     session = null;
   }
@@ -268,13 +248,11 @@
   }
 
   onMount(() => {
-    lastResult = read(LAST_KEY);
+    lastResult = store.loadLastResult(chapter);
 
-    const s = read(SESSION_KEY);
-
-    if (s && Array.isArray(s.queueIds) && s.queueIds.length) {
-      session = s;
-    }
+    // Shape validation belongs to the store; whether the saved run is still answerable
+    // against the current bank is decided in resumeSession, which has the questions.
+    session = store.loadSession(chapter);
   });
 </script>
 
