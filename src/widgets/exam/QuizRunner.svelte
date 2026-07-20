@@ -7,13 +7,22 @@
 
   import { createProgressStore } from '../../lib/progress-store';
 
+  import {
+    PASS_PCT,
+    answerText,
+    buildQueue,
+    filterQuestions,
+    gradeAnswer,
+    listTopics,
+    restoreSession,
+    summarize,
+  } from '../../lib/exam-engine';
+
   let { questions = [], chapter = 'introduction', chapterLabel = 'Chapter 1' } = $props();
 
   // Progress persistence lives behind one module: it owns this chapter's localStorage
   // keys, the JSON round-trip, and the case where storage is simply unavailable.
   const store = createProgressStore();
-
-  const byId = new Map(questions.map((q) => [q.id, q]));
 
   // ---- state ----
   let phase = $state('setup'); // 'setup' | 'quiz' | 'results'
@@ -41,64 +50,22 @@
   let session = $state(null);
 
   // ---- derived ----
-  const topics = $derived([...new Set(questions.map((q) => q.topic))]);
+  const topics = $derived(listTopics(questions));
 
   const current = $derived(queue[index] ?? null);
 
-  const score = $derived(answers.filter((a) => a.correct).length);
+  const filter = $derived({ topic: topicFilter, difficulty: difficultyFilter });
 
-  const filteredCount = $derived(filtered().length);
+  const filteredCount = $derived(filterQuestions(questions, filter).length);
 
   const progressPct = $derived(queue.length ? Math.round((index / queue.length) * 100) : 0);
 
-  const review = $derived(
-    answers
-      .map((a) => ({ q: byId.get(a.id), correct: a.correct }))
-      .filter((r) => r.q),
-  );
+  // One call covers both the running score and the results screen's misses list.
+  const summary = $derived(summarize(answers, questions));
 
-  // ---- helpers ----
-  function filtered() {
-    return questions.filter(
-      (q) =>
-        (topicFilter === 'all' || q.topic === topicFilter) &&
-        (difficultyFilter === 'all' || q.difficulty === difficultyFilter),
-    );
-  }
+  const score = $derived(summary.correct);
 
-  function shuffle(arr) {
-    const a = arr.slice();
-
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-
-    return a;
-  }
-
-  function answerText(q) {
-    if (q.type === 'mcq') return q.choices?.[q.answer] ?? '—';
-
-    if (q.type === 'true-false') return String(q.answer) === 'true' ? 'True' : 'False';
-
-    return String(q.answer);
-  }
-
-  function evaluate(q, given) {
-    if (q.type === 'mcq') return given === q.answer;
-
-    if (q.type === 'true-false') return given === String(q.answer);
-
-    if (q.type === 'numeric') {
-      const n = parseFloat(given);
-
-      return !Number.isNaN(n) && n === Number(q.answer);
-    }
-
-    return false; // 'short' is self-graded
-  }
+  const review = $derived(summary.review);
 
   // ---- flow ----
   function resetQuestion() {
@@ -112,7 +79,7 @@
   }
 
   function startRun() {
-    queue = shuffle(filtered());
+    queue = buildQueue(questions, filter);
 
     index = 0;
 
@@ -126,11 +93,17 @@
   }
 
   function submit() {
-    if (!current || current.type === 'short') return;
+    if (!current) return;
 
     if (selected === null || selected === '') return;
 
-    currentCorrect = evaluate(current, selected);
+    const verdict = gradeAnswer(current, selected);
+
+    // Short answers are the learner's to mark, and the engine says so in the verdict —
+    // no second check on `current.type` here to fall out of step with the grading.
+    if (verdict.kind === 'self-graded') return;
+
+    currentCorrect = verdict.kind === 'correct';
 
     recordAnswer(currentCorrect);
   }
@@ -168,13 +141,9 @@
   }
 
   function finish() {
-    const result = {
-      correct: score,
-
-      total: queue.length,
-
-      pct: queue.length ? Math.round((score / queue.length) * 100) : 0,
-    };
+    // Only the arithmetic is persisted — the review list is rebuilt from the live bank
+    // on the results screen, so it can never drift from the questions on disk.
+    const result = { correct: summary.correct, total: summary.total, pct: summary.pct };
 
     lastResult = result;
 
@@ -224,23 +193,25 @@
   function resumeSession() {
     if (!session) return;
 
-    const restored = session.queueIds.map((id) => byId.get(id)).filter(Boolean);
+    const restored = restoreSession(session, questions);
 
-    if (restored.length !== session.queueIds.length) {
+    // The bank was edited since this run was saved — discard it rather than resume a
+    // queue with questions missing from it.
+    if (restored === null) {
       clearSession();
 
       return;
     }
 
-    queue = restored;
+    queue = restored.queue;
 
-    answers = session.answers ?? [];
+    answers = restored.answers;
 
-    index = Math.min(session.index ?? 0, restored.length - 1);
+    index = restored.index;
 
-    topicFilter = session.topicFilter ?? 'all';
+    topicFilter = restored.topicFilter;
 
-    difficultyFilter = session.difficultyFilter ?? 'all';
+    difficultyFilter = restored.difficultyFilter;
 
     resetQuestion();
 
@@ -437,7 +408,7 @@
     <div class="results">
       <p class="eyebrow">Results</p>
 
-      <p class="score" class:score--pass={(lastResult?.pct ?? 0) >= 60}>{lastResult?.pct}%</p>
+      <p class="score" class:score--pass={(lastResult?.pct ?? 0) >= PASS_PCT}>{lastResult?.pct}%</p>
 
       <p class="score__detail">{lastResult?.correct} of {lastResult?.total} correct</p>
 
@@ -447,13 +418,15 @@
         <ul class="review">
           {#each review.filter((r) => !r.correct) as r}
             <li class="miss">
-              <p class="miss__prompt">{r.q.prompt}</p>
+              <p class="miss__prompt">{r.question.prompt}</p>
 
-              <p class="miss__answer"><span class="miss__label">Answer:</span> {answerText(r.q)}</p>
+              <p class="miss__answer">
+                <span class="miss__label">Answer:</span> {answerText(r.question)}
+              </p>
 
-              <p class="miss__sol">{r.q.solution}</p>
+              <p class="miss__sol">{r.question.solution}</p>
 
-              <span class="source" title={`Source: ${r.q.source}`}>{r.q.source}</span>
+              <span class="source" title={`Source: ${r.question.source}`}>{r.question.source}</span>
             </li>
           {/each}
         </ul>

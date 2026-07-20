@@ -13,6 +13,8 @@ import { getCollection } from 'astro:content';
 
 import { joinBase } from '../../lib/withBase';
 
+import type { Question } from '../../lib/exam-engine';
+
 const [questionEntries, chapterEntries] = await Promise.all([
   getCollection('questions'),
 
@@ -24,30 +26,11 @@ const chapterMeta = new Map(
   chapterEntries.map((entry) => [entry.id, { number: entry.data.number, title: entry.data.title }]),
 );
 
-// The plain question shape the island consumes (no collection reference).
-type IslandQuestion = {
-  id: string;
-
-  topic: string;
-
-  type: string;
-
-  difficulty: string;
-
-  prompt: string;
-
-  choices: string[] | null;
-
-  answer: number | string;
-
-  solution: string;
-
-  source: string;
-};
-
-// Group questions by their chapter slug, stripping the collection reference —
-// the island only needs the plain question fields, serialized across the boundary.
-const byChapter = new Map<string, IslandQuestion[]>();
+// Group questions by their chapter slug, stripping the collection reference — the
+// island only needs the plain question fields, serialized across the seam. `Question`
+// comes from the exam engine that grades them, so the page cannot hand the island a
+// shape the engine does not understand.
+const byChapter = new Map<string, Question[]>();
 
 for (const entry of questionEntries) {
 
