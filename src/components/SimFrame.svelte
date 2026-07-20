@@ -16,6 +16,8 @@
   // import.
   import type { Snippet } from 'svelte';
 
+  import { nextRovingIndex } from '../lib/roving-index';
+
   interface Props {
     title: string;
 
@@ -108,23 +110,28 @@
     }
   }
 
+  // Segment order in the markup below — the index space nextRovingIndex walks.
+  const MODES = ['guided', 'explore'] as const;
+
   function onModeToggleKeydown(event: KeyboardEvent) {
 
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    const target = nextRovingIndex(event.key, MODES.indexOf(mode), MODES.length, {
 
-      event.preventDefault();
+      // A locked Explore is skipped by the traversal, so with only two segments
+      // every arrow key reports no movement until the reader unlocks it.
+      isDisabled: (index) => index === 1 && !exploreUnlocked,
+    });
 
-      selectMode('guided');
+    if (target === null) {
 
-      focusMode('guided');
-    } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-
-      event.preventDefault();
-
-      selectMode('explore');
-
-      focusMode('explore');
+      return;
     }
+
+    event.preventDefault();
+
+    selectMode(MODES[target]);
+
+    focusMode(MODES[target]);
   }
 
   // Bonus keyboard layer beyond native <button> focus/Enter/Space (SimFrame

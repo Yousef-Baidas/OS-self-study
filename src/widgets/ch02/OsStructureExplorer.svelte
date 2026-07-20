@@ -8,6 +8,8 @@
   // three render `kind`s) live in os-structures.ts.
   import { osStructures } from './os-structures';
 
+  import { nextRovingIndex } from '../../lib/roving-index';
+
   let selectedId = $state(osStructures[0].id);
 
   // Non-null: selectedId only ever holds an id from the same array.
@@ -24,23 +26,7 @@
 
   function onSegmentKeydown(event: KeyboardEvent, index: number) {
 
-    const count = osStructures.length;
-
-    let nextIndex: number | null = null;
-
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-
-      nextIndex = (index + 1) % count;
-    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-
-      nextIndex = (index - 1 + count) % count;
-    } else if (event.key === 'Home') {
-
-      nextIndex = 0;
-    } else if (event.key === 'End') {
-
-      nextIndex = count - 1;
-    }
+    const nextIndex = nextRovingIndex(event.key, index, osStructures.length);
 
     if (nextIndex === null) {
 
