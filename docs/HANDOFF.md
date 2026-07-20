@@ -13,7 +13,7 @@ GitHub Pages (base path `/OS-self-study/`). Toolchain: Bun. Author + classmates 
 **Core value:** distilled lecture notes + interactive sims that make an OS concept click faster than
 re-reading the slides. Every claim cites its source slide so a student can jump to the deck.
 
-## Current state (2026-07-19)
+## Current state (2026-07-21)
 
 - **Chapter 1 (Introduction)** — complete, live at `/chapters/introduction`. Rewritten from dense
   prose into scannable lecture notes: section `<Lead>` essences, comparison tables for every
@@ -50,7 +50,7 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   score + review-your-misses → resumable. 20 Chapter-1 + 22 Chapter-2 questions.
 - **Architecture (2026-07-21)** — the exam slice was carved back into the layout the project
   always intended: **content data beside its widget, framework-free logic in `src/lib/`**
-  (see the Architecture section of `CLAUDE.md`). Three new modules, all unit-tested:
+  (the rule and its reasoning are in `docs/ARCHITECTURE.md`). Three new modules, all unit-tested:
   `exam-engine.ts` (grading, filtering, queue building, scoring), `progress-store.ts`
   (all localStorage behind an injectable seam), `roving-index.ts` (shared radiogroup
   keyboard math). Test count went 57 → 105, and the exam slice went from **zero** tests to
@@ -88,16 +88,30 @@ hard-refresh to beat the Pages cache after a deploy.
 
 ## Next up
 
-1. **Chapters 3–10 content** — all decks are in `CONTENT/slides/`. Reuse the Chapter-1/2 pattern
-   (Lead + tables + SlideRef + figures + sims). Extract per-slide text for accurate citations:
-   `python3` unzip of the `.pptx` (see the pattern used for Ch1/Ch2).
-2. **Exam bank per chapter** — add `src/content/questions/chNN.json`; the exam page auto-groups it
-   into the `ExamShell` chapter switcher (no page change needed — it globs all chapters).
-3. **Exam UX later** — cross-chapter mixed sets, timed mode, per-topic accuracy history. These are
-   now changes to `src/lib/exam-engine.ts` with tests, not surgery inside the island: mixed sets are
-   a `buildQueue` over several banks, accuracy history is a `progress-store` key.
+**Start here: Chapter 3.** The plumbing is done and tested; what the site needs now is content.
+Nothing below blocks it.
+
+1. **Chapters 3–10 content** — the real work, one chapter per session. All decks are in
+   `CONTENT/slides/`. Reuse the Chapter-1/2 pattern (Lead + comparison tables + SlideRef + inline
+   figures + one or two sims). Extract per-slide text for accurate citations with a `python3` unzip
+   of the `.pptx` (same approach used for Ch1/Ch2). A chapter is one delivery unit: MDX + figures +
+   sims + its question bank, then commit.
+2. **Exam bank per chapter** — add `src/content/questions/chNN.json` alongside the chapter. The exam
+   page globs every chapter and auto-groups it into the `ExamShell` switcher, so no page change is
+   needed. Remember the dev-server restart (see Gotchas).
+3. **New sims** — build on `SimFrame` (`title`, `caption`, `totalSteps`, `bind:step`, `bind:mode`).
+   Put the step/tier data in a sibling `chNN/*.ts` and unit-test its shape, matching the five
+   existing data modules. Keyboard nav on any segmented control should call
+   `nextRovingIndex` from `src/lib/roving-index.ts` rather than hand-rolling arrow handling again.
+4. **Exam UX, when wanted** — cross-chapter mixed sets, timed mode, per-topic accuracy history.
+   These are now changes to `src/lib/exam-engine.ts` with tests, not surgery inside the island:
+   mixed sets are a `buildQueue` over several banks, accuracy history is another `progress-store`
+   key. `PASS_PCT` is a constant there if the pass mark should move.
 
 ## Known rough edges
+
+None of these is urgent — they are the honest list of what a future session might pick up, in
+rough order of value.
 
 - **`ExamShell.svelte:22`** — svelte-check warns that `groups` is read non-reactively inside
   `onMount`. Harmless today (the prop never changes after mount, and switching chapters remounts
@@ -113,6 +127,14 @@ hard-refresh to beat the Pages cache after a deploy.
   `StorageTier.storageClass` are authored and unit-tested but never rendered, while the widgets
   hardcode the labels they do show. Either render them (SimFrame could take the step descriptors
   instead of a bare `totalSteps` count) or delete them with their assertions.
+- **`CategorySorter` and `OsStructureExplorer` don't use `SimFrame`** — its interface requires
+  `totalSteps`/`step`, and neither widget steps, so both re-declare its card, heading and segmented
+  control CSS rule-for-rule. Making the stepper part conditional would give all five sims one visual
+  recipe. Worth doing only alongside the descriptor change above — it is the same interface edit,
+  and on its own it moves CSS around rather than concentrating any behaviour.
+- **CSS is 46–69% of every widget file**, and the accent-highlight trio
+  (`border-color: var(--color-accent); background: var(--color-accent-wash)`) is repeated eight
+  times across the sims. A shared token class in `global.css` would collapse it.
 
 ## Gotchas / decisions
 
@@ -126,6 +148,15 @@ hard-refresh to beat the Pages cache after a deploy.
 - **Verifying sims/exam in-browser**: Svelte 5 delegated click handlers don't fire from synthetic
   `dispatchEvent` — use real clicks (Playwright `.click()`). Native `<select>` change events are not
   delegated and do work via dispatch. The `<astro-dev-toolbar>` at bottom-center is dev-only.
+- **Don't try to fake storage failure by patching then reloading** — a reload is a fresh JS context,
+  so the patch is gone before the island mounts and you end up verifying nothing. The
+  storage-unavailable path is covered properly in `tests/lib/progress-store.test.ts`, which injects
+  a hostile adapter; that is what the injectable seam is for.
+- **Unit-green is not verified** for anything with a DOM behaviour. The roving-index extraction
+  passed all 57 tests while silently scrolling the page 40px on a locked segment — the defect was
+  in what the interface failed to distinguish, and only a browser showed it.
+- **`bun run dev` daemonizes** — it returns immediately and keeps running in the background.
+  `bunx astro dev stop` to shut it down, `astro dev status` / `astro dev logs` to inspect it.
 - **`astro.config.mjs` edits need a dev-server restart** (not hot-reloaded) — e.g. the
   Expressive-Code `styleOverrides.textMarkers` that retint highlighted code lines to the teal accent.
   `styleOverrides` values accept `var(--token)`, so code-block chrome stays theme-aware.
