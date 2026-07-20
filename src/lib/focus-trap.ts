@@ -7,7 +7,7 @@
 // Split in two by testability: `nextTrapIndex` is the pure tab-cycling wrap
 // math (framework-free, unit-tested below); `getFocusableElements` touches
 // the DOM and is NOT unit-tested (no jsdom in this stack, by design — see
-// ARCHITECTURE.md's "src/lib/ stays framework-free" convention).
+// docs/ARCHITECTURE.md's "src/lib/ stays framework-free" rule).
 
 // Computes the next focusable index when Tab (shift=false) or Shift+Tab
 // (shift=true) is pressed inside a focus-trapped container, wrapping at

@@ -48,6 +48,17 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   (progress + last score stay per-chapter). Each runner: filter by topic/difficulty → answer
   mcq / true-false / numeric / short → instant feedback with worked solution + slide citation →
   score + review-your-misses → resumable. 20 Chapter-1 + 22 Chapter-2 questions.
+- **Architecture (2026-07-21)** — the exam slice was carved back into the layout the project
+  always intended: **content data beside its widget, framework-free logic in `src/lib/`**
+  (see the Architecture section of `CLAUDE.md`). Three new modules, all unit-tested:
+  `exam-engine.ts` (grading, filtering, queue building, scoring), `progress-store.ts`
+  (all localStorage behind an injectable seam), `roving-index.ts` (shared radiogroup
+  keyboard math). Test count went 57 → 105, and the exam slice went from **zero** tests to
+  covered. `QuizRunner`'s script dropped 279 → 148 lines; it now holds runtime state and
+  renders, nothing else. Two behaviour changes worth knowing: grading returns a **verdict**
+  (`correct` / `incorrect` / `self-graded`) so a short answer can never be recorded wrong by
+  a forgotten type check, and SimFrame's mode toggle gained wrap + Home/End to match the
+  WAI-ARIA radiogroup pattern the explorer already followed.
 - **Deployed** — live on GitHub Pages at <https://yousef-baidas.github.io/OS-self-study/>.
   `main` is now the trunk/deploy branch (fast-forwarded from `foundation`); push to `main` → auto-deploy.
 
@@ -58,9 +69,12 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
 | Chapter content (MDX) | `src/content/chapters/NN-*.mdx` |
 | Notes components | `src/components/{SlideRef,Lead,Callout,Figure}.astro` |
 | Figures (inline SVG) | `src/assets/figures/<ch>/*.svg` |
-| Sims (per chapter) | `src/widgets/<ch>/*.svelte` |
+| Sims (per chapter) | `src/widgets/<ch>/*.svelte` + sibling `*.ts` content data |
 | Exam questions | `src/content/questions/<ch>.json` (schema in `src/content.config.ts`) |
-| Exam engine | `src/widgets/exam/{ExamShell,QuizRunner}.svelte`, page `src/pages/exam/index.astro` |
+| Exam logic | `src/lib/exam-engine.ts` (grading, queue, scoring), `src/lib/progress-store.ts` (persistence) |
+| Exam UI | `src/widgets/exam/{ExamShell,QuizRunner}.svelte`, page `src/pages/exam/index.astro` |
+| Shared framework-free logic | `src/lib/*.ts` — all unit-tested in `tests/lib/` |
+| Domain glossary | `CONTEXT.md` |
 | Design tokens / globals | `src/styles/tokens.css`, `src/styles/global.css` |
 | Source slides / review PDFs | `CONTENT/slides/OS_chapterN.pptx`, `CONTENT/*.pdf` |
 
@@ -79,7 +93,26 @@ hard-refresh to beat the Pages cache after a deploy.
    `python3` unzip of the `.pptx` (see the pattern used for Ch1/Ch2).
 2. **Exam bank per chapter** — add `src/content/questions/chNN.json`; the exam page auto-groups it
    into the `ExamShell` chapter switcher (no page change needed — it globs all chapters).
-3. **Exam UX later** — cross-chapter mixed sets, timed mode, per-topic accuracy history.
+3. **Exam UX later** — cross-chapter mixed sets, timed mode, per-topic accuracy history. These are
+   now changes to `src/lib/exam-engine.ts` with tests, not surgery inside the island: mixed sets are
+   a `buildQueue` over several banks, accuracy history is a `progress-store` key.
+
+## Known rough edges
+
+- **`ExamShell.svelte:22`** — svelte-check warns that `groups` is read non-reactively inside
+  `onMount`. Harmless today (the prop never changes after mount, and switching chapters remounts
+  the runner), but it is the last warning in the tree if you want zero.
+- **The remaining sim duplication** — `InterruptCycle` and `SyscallJourney` still hold two copies of
+  the same cancellable replay loop (~70 lines, differing only in step data and delay), and both
+  carry the same latch bug: on the cancel path `replaying` is never cleared, so the trigger button's
+  disabled state depends on an `$effect` firing. A `createReplay({ steps, delayMs, sleep })` module
+  in `src/lib/` would fix it in one place and — with `sleep` injected — give the sims their first
+  behavioural test. This was built and verified once on 2026-07-17, then reverted to return the tree
+  to a clean state; nothing was wrong with it.
+- **Dead descriptor fields** — `StepDescriptor.caption`, `JourneyStep.caption` and
+  `StorageTier.storageClass` are authored and unit-tested but never rendered, while the widgets
+  hardcode the labels they do show. Either render them (SimFrame could take the step descriptors
+  instead of a bare `totalSteps` count) or delete them with their assertions.
 
 ## Gotchas / decisions
 
