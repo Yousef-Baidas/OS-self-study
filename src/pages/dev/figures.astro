@@ -1,0 +1,98 @@
+---
+// Dev-only contact sheet: every chapter figure inlined on one page. Figure SVG
+// coordinates are author-asserted — nothing in the build validates them, so a
+// diagram can compile clean and still render with overlapping labels or connectors
+// pointing at nothing. This page is how those defects get seen: load it, screenshot
+// it, then flip document.documentElement.dataset.theme and screenshot again.
+// Excluded from the production build by the PROD guard below.
+import '../../styles/global.css';
+
+import { joinBase } from '../../lib/withBase';
+
+// A static build still emits a route for this file, so send it to the home page.
+// The base must be joined explicitly — a bare '/' would point off the Pages base
+// path and land on the domain root rather than the site.
+if (import.meta.env.PROD) {
+  return Astro.redirect(joinBase(import.meta.env.BASE_URL, ''));
+}
+
+const svgModules = import.meta.glob('/src/assets/figures/**/*.svg', {
+  query: '?raw',
+
+  import: 'default',
+
+  eager: true,
+});
+
+const figures = Object.entries(svgModules)
+  .map(([path, svg]) => ({
+    name: path.replace('/src/assets/figures/', ''),
+
+    svg: svg as string,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Figure contact sheet</title>
+  </head>
+
+  <body>
+    {
+      figures.map((figure) => (
+        <section class="row">
+          <h2>{figure.name}</h2>
+
+          <div class="plate" set:html={figure.svg} />
+        </section>
+      ))
+    }
+  </body>
+</html>
+
+<style>
+  body {
+    margin: 0;
+
+    padding: 24px;
+
+    background: var(--color-bg);
+  }
+
+  h2 {
+    margin: 0 0 8px;
+
+    color: var(--color-text-muted);
+
+    font: 600 12px/1.4 var(--font-mono);
+  }
+
+  .row {
+    max-width: 760px;
+
+    margin: 0 auto 32px;
+  }
+
+  .plate {
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+
+    border-radius: var(--radius-md);
+
+    padding: 20px;
+  }
+
+  .plate :global(svg) {
+    display: block;
+
+    width: 100%;
+
+    height: auto;
+  }
+</style>
