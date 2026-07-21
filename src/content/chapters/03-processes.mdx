@@ -23,6 +23,8 @@ import Callout from '../../components/Callout.astro';
 
 import Figure from '../../components/Figure.astro';
 
+import ForkTree from '../../widgets/ch03/ForkTree.svelte';
+
 import Lead from '../../components/Lead.astro';
 
 import SlideRef from '../../components/SlideRef.astro';
@@ -363,6 +365,8 @@ int main(void) {
 ```
 
 Here `x` holds the return value of the **third** `fork()` only — the first two assignments are overwritten. `x == 0` is true in exactly the processes that were **created by the third fork**, which is half of the eight, so **4 more** processes are created: **12 in total**.
+
+<ForkTree client:visible />
 
 ## Process Termination
 
