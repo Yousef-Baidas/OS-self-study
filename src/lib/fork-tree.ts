@@ -77,25 +77,14 @@ export function cloneTree(root: ForkNode): ForkNode {
   };
 }
 
-// TODO(you) — the heart of the chapter's exam question.
+// Grow the tree by one fork() call: a NEW tree in which every process `shouldFork`
+// accepts has gained exactly one child.
 //
-// Grow the tree by one fork() call: return a NEW tree in which every process that
-// `shouldFork` accepts has gained exactly one child.
-//
-// The rules that make this correct:
-//   - Snapshot the population BEFORE anyone forks. If you append children while
-//     walking, the newborns get swept into the same generation and the count runs away
-//     — this is the code-level version of the mistake the chapter warns about.
-//   - Give each new child `bornAt: callIndex`, so a later conditional can tell which
-//     processes the last fork() created.
-//   - Mint each child's label with `mintId()`, calling it once per new process, in
-//     level order, so the numbering reads in scan order.
-//
-// Suggested shape (roughly 6 lines):
-//   const next = cloneTree(root);
-//   const population = levelOrder(next).filter(shouldFork);
-//   for (const parent of population) { parent.children.push({ ... }); }
-//   return next;
+// The population is snapshotted before any of it forks, which is the whole point.
+// fork() returns into two processes that both resume AFTER the call, so a process
+// born at call n does not re-execute call n. Appending children while walking would
+// sweep the newborns into the same generation and reach 8 after two calls instead of
+// 4 — the code-level form of the mistake the chapter's exam question punishes.
 export function growGeneration(
   root: ForkNode,
   callIndex: number,
@@ -103,7 +92,18 @@ export function growGeneration(
   mintId: () => string,
 ): ForkNode {
 
-  throw new Error('growGeneration is not implemented yet');
+  const next = cloneTree(root);
+
+  // Level order, and materialised in full before the loop below touches anything:
+  // this array IS the population entering the call, and it cannot grow underneath us.
+  const population = levelOrder(next).filter(shouldFork);
+
+  for (const parent of population) {
+
+    parent.children.push({ id: mintId(), bornAt: callIndex, children: [] });
+  }
+
+  return next;
 }
 
 // Every stage of the program, starting from the lone initial process. Index 0 is the
