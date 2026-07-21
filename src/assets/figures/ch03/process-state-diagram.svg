@@ -1,0 +1,66 @@
+<svg viewBox="0 0 620 360" xmlns="http://www.w3.org/2000/svg">
+  <!-- The five-state process diagram (slides 8-9). Two things the layout is trying
+       to make unmissable: only ONE arrow enters `running` (scheduler dispatch), and
+       `waiting` has no arrow to `running` at all — a woken process must go back
+       through `ready` and be dispatched like everyone else. -->
+  <defs>
+    <marker id="arw-ps" markerWidth="12" markerHeight="12" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,3.5 L0,7 Z" class="fg-arrow" />
+    </marker>
+  </defs>
+
+  <!-- new -->
+  <rect x="24" y="28" width="112" height="50" rx="10" class="fg-node" />
+
+  <text x="80" y="59" text-anchor="middle" class="fg-text" font-size="14">new</text>
+
+  <!-- terminated -->
+  <rect x="484" y="28" width="112" height="50" rx="10" class="fg-node" />
+
+  <text x="540" y="59" text-anchor="middle" class="fg-text" font-size="14">terminated</text>
+
+  <!-- ready -->
+  <rect x="150" y="150" width="120" height="56" rx="10" class="fg-node-accent" />
+
+  <text x="210" y="184" text-anchor="middle" class="fg-text" font-size="15">ready</text>
+
+  <!-- running: the only state actually on a CPU -->
+  <rect x="376" y="150" width="120" height="56" rx="10" class="fg-node-accent" />
+
+  <text x="436" y="184" text-anchor="middle" class="fg-text" font-size="15">running</text>
+
+  <!-- waiting -->
+  <rect x="264" y="286" width="120" height="56" rx="10" class="fg-node" />
+
+  <text x="324" y="320" text-anchor="middle" class="fg-text" font-size="15">waiting</text>
+
+  <!-- new -> ready : admitted -->
+  <path d="M92 80 C 100 116, 130 140, 158 148" class="fg-line" marker-end="url(#arw-ps)" />
+
+  <text x="86" y="124" class="fg-text-muted" font-size="11.5">admitted</text>
+
+  <!-- ready -> running : the sole entrance to running -->
+  <path d="M270 166 L368 166" class="fg-line" marker-end="url(#arw-ps)" />
+
+  <text x="323" y="140" text-anchor="middle" class="fg-text-muted" font-size="11.5">scheduler dispatch</text>
+
+  <!-- running -> ready : involuntary, on interrupt -->
+  <path d="M376 192 L278 192" class="fg-line" marker-end="url(#arw-ps)" />
+
+  <text x="327" y="212" text-anchor="middle" class="fg-text-muted" font-size="11.5">interrupt</text>
+
+  <!-- running -> terminated : exit -->
+  <path d="M482 150 C 500 118, 516 96, 528 82" class="fg-line" marker-end="url(#arw-ps)" />
+
+  <text x="512" y="128" class="fg-text-muted" font-size="11.5">exit</text>
+
+  <!-- running -> waiting : voluntary, the process asked to block -->
+  <path d="M424 206 C 412 244, 396 268, 380 292" class="fg-line" marker-end="url(#arw-ps)" />
+
+  <text x="404" y="258" class="fg-text-muted" font-size="11.5">I/O or event wait</text>
+
+  <!-- waiting -> ready : back into the queue, NOT straight to running -->
+  <path d="M268 300 C 232 280, 214 246, 208 214" class="fg-line" marker-end="url(#arw-ps)" />
+
+  <text x="112" y="268" class="fg-text-muted" font-size="11.5">I/O or event completion</text>
+</svg>

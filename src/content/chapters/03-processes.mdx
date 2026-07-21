@@ -1,0 +1,500 @@
+---
+number: 3
+title: "Processes"
+slug: "processes"
+summary: "What a program becomes once it runs — its memory layout and control block, the five states it moves between, the context switch that swaps it off the CPU, the queues and schedulers that decide who runs next, how fork/exec/wait build a tree of processes, and how cooperating processes talk through shared memory or messages."
+topics:
+  - "Program vs process vs thread"
+  - "A process in memory"
+  - "The Process Control Block"
+  - "Process states"
+  - "Context switch"
+  - "Threads and task_struct"
+  - "Scheduling queues and schedulers"
+  - "Process creation — fork, exec, wait"
+  - "Process termination — zombies and orphans"
+  - "Interprocess communication"
+  - "Race conditions"
+slideCount: 42
+status: "draft"
+---
+
+import Callout from '../../components/Callout.astro';
+
+import Figure from '../../components/Figure.astro';
+
+import Lead from '../../components/Lead.astro';
+
+import SlideRef from '../../components/SlideRef.astro';
+
+<Callout type="key">
+  **By the end of this chapter you can:** say precisely what separates a **program** from a
+  **process**; name the four regions of a process's **memory image** and what lives in each; list
+  what the **PCB** stores and why a context switch needs it; walk a process through the **five
+  states** and trace a round-robin schedule by hand; distinguish the **short-, long-, and
+  medium-term schedulers**; use **`fork()`**, **`exec()`**, **`wait()`**, and **`exit()`** to build
+  and tear down a process tree — and count the processes a chain of forks produces; explain
+  **zombies** and **orphans**; and compare the two models of **interprocess communication**, shared
+  memory and message passing, including the **race condition** shared memory invites.
+</Callout>
+
+## Program, Process, and Thread
+
+<Lead from={2} to={3} chapter={3}>A program is a passive file on disk; a process is that program in execution, alive in memory with resources of its own.</Lead>
+
+The distinction the whole chapter rests on <SlideRef n={2} chapter={3} />:
+
+| | Program | Process |
+| --- | --- | --- |
+| Nature | **Passive** entity | **Active** entity |
+| Where it lives | A file on **disk** (an *executable* file) | Loaded into **memory** |
+| What it is | A list of instructions | A program **in execution** |
+| Lifetime | Persists until deleted | Exists from creation until termination |
+
+A program **becomes** a process when its executable file is loaded into memory. That loading is triggered the ordinary ways — a GUI mouse click, a CLI command, and so on <SlideRef n={2} chapter={3} />.
+
+<Callout type="note">
+  Two facts that look contradictory but aren't. **One program can be several processes** — open the
+  same browser twice and you have two processes running one program. And a process's execution
+  **must progress sequentially**: there is no parallel execution of the instructions of a *single*
+  process <SlideRef n={2} chapter={3} />. Sequential *within* one process, many processes running at once
+  *across* the system.
+</Callout>
+
+Process management is **the fundamental task of any operating system** <SlideRef n={3} chapter={3} />. And a process is more than its code: it carries a set of resources — **open files** and **pending signals** — plus internal **kernel data**, **processor state**, an **address space**, and a **data section**.
+
+A **thread**, introduced later in this chapter, is what you get when a single process is allowed more than one point of execution at a time.
+
+## A Process in Memory
+
+<Lead from={4} to={5} chapter={3}>A process's memory image splits into four regions — two fixed in size at load time, two that grow and shrink as it runs.</Lead>
+
+When a program is loaded, its memory is divided into parts <SlideRef n={4} chapter={3} />:
+
+| Region | Holds | Size |
+| --- | --- | --- |
+| **Text** | The program code — **read-only** | Fixed at load time |
+| **Data** | **Global** variables | Fixed at load time |
+| **Heap** | Memory allocated **dynamically at run time** | Grows and shrinks |
+| **Stack** | Function **parameters**, **return addresses**, **local** variables | Grows and shrinks |
+
+Alongside those four sits the process's **current activity** — the **program counter** and the **processor registers** <SlideRef n={4} chapter={3} />. That pair is not a region of memory but a snapshot of the CPU, and it is exactly what a context switch has to save.
+
+<Figure
+  src="figures/ch03/memory-layout.svg"
+  alt="Memory layout of a C program: from low addresses upward, the text section, then initialized and uninitialized data, then the heap growing upward, a gap, and the stack growing downward from high addresses"
+  caption="Figure 3.1 — Memory layout of a C program. The heap grows up and the stack grows down into the gap between them, which is why neither needs a fixed size."
+/>
+
+The heap and stack grow **toward each other** through the free space between them. That layout is what lets a process allocate more memory at run time without deciding up front how much it will need — and it is why a runaway recursion (stack) or an unbounded allocation (heap) eventually collides with the other.
+
+Because processes share one machine, the OS must **allocate resources** to them, **enable sharing** of information, **protect** resources, and **enable synchronization** among them <SlideRef n={6} chapter={3} />.
+
+## The Process Control Block
+
+<Lead n={7} chapter={3}>Every process has one kernel record — the PCB — holding everything the OS needs to stop it and later resume it exactly where it left off.</Lead>
+
+The information associated with each process lives in a **Process Control Block (PCB)**, also called a **task control block** <SlideRef n={7} chapter={3} />:
+
+| Field | What it stores |
+| --- | --- |
+| **Process ID (PID)** | The unique number the OS identifies the process by |
+| **Process state** | Running, waiting, ready, … |
+| **Program counter** | Address of the **next** instruction to execute |
+| **CPU registers** | Contents of all process-centric registers |
+| **CPU scheduling information** | Priorities, scheduling-queue pointers |
+| **Memory-management information** | The memory allocated to this process |
+| **Accounting information** | CPU used, clock time since start, time limits |
+| **I/O status information** | Devices allocated to the process, list of open files |
+
+<Callout type="note">
+  Read that table as an answer to one question: *what would you have to write down about a running
+  process so that you could stop it, run something else, and later resume it as if nothing had
+  happened?* Every field is there because a context switch would otherwise lose it. The **program
+  counter** and **registers** in particular are the process's execution position — lose them and the
+  process cannot be resumed at all, only restarted.
+</Callout>
+
+## Process States
+
+<Lead from={8} to={9} chapter={3}>As a process executes it changes state, moving between five of them — and only one, running, means it is actually on a CPU.</Lead>
+
+Each process is in exactly one of these states at a time <SlideRef n={8} chapter={3} />:
+
+| State | Meaning |
+| --- | --- |
+| **New** | The process is being created |
+| **Ready** | Waiting to be **assigned to a processor** |
+| **Running** | Instructions are **being executed** |
+| **Waiting** | Waiting for some **event** to occur (typically I/O) |
+| **Terminated** | The process has **finished** execution |
+
+<Figure
+  src="figures/ch03/process-state-diagram.svg"
+  alt="Diagram of process state: new leads by admit to ready; ready leads by scheduler dispatch to running; running leads by interrupt back to ready, by exit to terminated, and by I/O or event wait to waiting; waiting leads by I/O or event completion back to ready"
+  caption="Figure 3.2 — The five-state diagram. Note that nothing goes from waiting straight back to running: a woken process must re-enter ready and be dispatched again."
+/>
+
+The two distinctions students lose marks on:
+
+- **Ready vs. waiting.** A **ready** process could run right now — it just isn't the one the scheduler picked. A **waiting** process *could not* run even if the CPU were free, because it is blocked on an event. Ready is "willing and able, not chosen"; waiting is "not able".
+
+- **Waiting never goes straight to running.** When the I/O completes, the process moves to **ready** and queues up like everyone else. Only the **scheduler dispatch** arrow enters *running*, so that is the only way in.
+
+There is one more asymmetry worth naming: **running → ready** happens on an **interrupt** — the process is shoved off the CPU against its will, typically because its time quantum expired. **Running → waiting** happens because the process *asked* to wait, by issuing an I/O request. One is involuntary, the other is voluntary.
+
+### Worked example — round-robin, quantum 4 ms
+
+Three processes arrive at time 0 and are scheduled **round-robin with a 4 ms quantum** <SlideRef n={13} chapter={3} />:
+
+| Process | CPU burst 1 | I/O time | CPU burst 2 |
+| --- | --- | --- | --- |
+| **P1** | 6 ms | 4 ms | 5 ms |
+| **P2** | 8 ms | — | — |
+| **P3** | 5 ms | 3 ms | 3 ms |
+
+The solution, one row per interval <SlideRef n={14} chapter={3} />:
+
+| Time | P1 | P2 | P3 | On CPU | What happens |
+| --- | --- | --- | --- | --- | --- |
+| 0 – 4 | **Running** | Ready | Ready | P1 | P1 uses 4 ms; 2 ms left in burst 1 |
+| 4 – 8 | Ready | **Running** | Ready | P2 | P2 uses 4 ms; 4 ms left in burst 1 |
+| 8 – 12 | Ready | Ready | **Running** | P3 | P3 uses 4 ms; 1 ms left in burst 1 |
+| 12 – 14 | **Running** | Ready | Ready | P1 | P1 finishes burst 1 → I/O (waiting) until 18 |
+| 14 – 18 | Waiting | **Running** | Ready | P2 | P2 finishes its burst → terminated after this |
+| 18 – 19 | Ready | Terminated | **Running** | P3 | P3 finishes burst 1 → I/O (waiting) until 22 |
+| 19 – 22 | **Running** | Terminated | Waiting | P1 | P1 uses 3 ms of burst 2 |
+| 22 – 23 | **Running** | Terminated | Ready | P1 | P1 completes its 4 ms quantum; P3's I/O finished, so P3 → ready |
+| 23 – 26 | Ready | Terminated | **Running** | P3 | P3 runs its 3 ms burst 2 → terminated |
+| 26 – 27 | **Running** | Terminated | Terminated | P1 | P1 finishes its last 1 ms → terminated |
+| 27 | Terminated | Terminated | Terminated | — | All done |
+
+<Callout type="note">
+  The moment to understand is **12 – 14**. P1 had only 2 ms of its burst left, so it does *not* use
+  its full 4 ms quantum — a process gives the CPU back the instant it blocks on I/O, not when its
+  quantum runs out. A quantum is an **upper bound** on a turn, not a fixed length. The same thing
+  happens to P3 at **18 – 19** with 1 ms remaining.
+</Callout>
+
+## Context Switch
+
+<Lead from={15} to={16} chapter={3}>Switching the CPU to another process means saving one PCB and loading another — and every microsecond of it is pure overhead.</Lead>
+
+When the CPU switches to another process, the system must **save the state of the old process** and **load the saved state for the new process**. That operation is a **context switch**, and the *context* it moves is exactly what the PCB holds <SlideRef n={15} chapter={3} />.
+
+<Figure
+  src="figures/ch03/context-switch.svg"
+  alt="CPU switch from process to process: process P0 executing, then an interrupt causes its state to be saved into PCB0 and PCB1's state reloaded, P1 executes, then the reverse happens, with both processes idle while the switch is in progress"
+  caption="Figure 3.3 — A context switch. The shaded save/reload intervals are time in which neither process is executing."
+/>
+
+Three consequences follow, and they are the examinable part <SlideRef n={15} chapter={3} />:
+
+- **Context-switch time is pure overhead.** The system does **no useful work** while switching — both processes are idle for the duration.
+
+- **The more complex the OS and the PCB, the longer the switch**, because there is more state to save and restore.
+
+- **The cost depends on hardware support.** Some hardware provides **multiple sets of registers per CPU**, so several contexts are loaded at once and switching between them costs almost nothing.
+
+<Callout type="note">
+  This is the direct answer to "why not just use a 1 ms quantum so everything feels responsive?" —
+  the switch itself has a fixed cost, so the smaller the quantum, the larger the *fraction* of every
+  time slice spent switching rather than computing. Quantum choice is a trade between responsiveness
+  and throughput.
+</Callout>
+
+## Threads, and a Process in Linux
+
+<Lead from={17} to={18} chapter={3}>Give a process more than one program counter and its single thread of execution becomes several.</Lead>
+
+Everything so far assumed a process has a **single thread of execution**. Now consider giving it **multiple program counters** — several locations in the same process executing at once. Those are **threads**, and supporting them means the PCB must store **thread details** and **multiple program counters** rather than one <SlideRef n={17} chapter={3} />.
+
+In Linux, a process is represented by the C structure **`task_struct`** <SlideRef n={18} chapter={3} />:
+
+```c title="task_struct (abridged)" {2,6,7}
+struct task_struct {
+  pid_t pid;                     /* process identifier */
+  long state;                    /* state of the process */
+  unsigned int time_slice;       /* scheduling information */
+  struct task_struct *parent;    /* this process's parent */
+  struct list_head children;     /* this process's children */
+  struct files_struct *files;    /* list of open files */
+  struct mm_struct *mm;          /* address space of this process */
+};
+```
+
+<Callout type="note">
+  Read this struct back against the **PCB table** above — it is the same list, in real code. `pid`
+  is the process ID, `state` is the process state, `time_slice` is scheduling information, `files`
+  is I/O status information, and `mm` is memory-management information. The two fields with no PCB
+  row of their own, **`parent`** and **`children`**, are what make the process **tree** of the next
+  section representable at all.
+</Callout>
+
+## Scheduling Queues and Schedulers
+
+<Lead from={19} to={23} chapter={3}>The scheduler picks who runs next out of a set of queues, and the process spends its life migrating between them.</Lead>
+
+The **process scheduler** selects among available processes for the next execution on a CPU core, aiming to **maximize CPU use** by switching processes onto the core quickly <SlideRef n={19} chapter={3} />. On a **single-processor system there is never more than one running process** — if there are several processes, the rest must wait.
+
+To manage that waiting, the OS maintains **scheduling queues** <SlideRef from={19} to={20} chapter={3} />:
+
+| Queue | Contains |
+| --- | --- |
+| **Job queue** | **All** processes in the system |
+| **Ready queue** | Processes in main memory, **ready and waiting to execute** |
+| **Wait queues** (device queues) | Processes waiting for an **event**, typically an I/O device |
+
+Processes **migrate** among these queues over their lifetime — dispatched from ready to the CPU, pushed to a wait queue on an I/O request, returned to ready when it completes.
+
+<Figure
+  src="figures/ch03/scheduling-queues.svg"
+  alt="Queueing diagram of process scheduling: the ready queue feeds the CPU; from the CPU a process may go to an I/O wait queue and return to the ready queue, have its time slice expire and return to the ready queue, fork a child and return, or wait for an interrupt and return"
+  caption="Figure 3.4 — Queueing diagram. Every path out of the CPU that is not termination loops back to the ready queue."
+/>
+
+Three schedulers do this work, and they are told apart by **how often they run** <SlideRef n={23} chapter={3} />:
+
+| Scheduler | Also called | Decides | Frequency | Speed requirement |
+| --- | --- | --- | --- | --- |
+| **Short-term** | CPU scheduler | Which ready process **executes next**, and allocates the CPU | Every few **milliseconds** | **Must be fast** |
+| **Long-term** | Job scheduler | Which processes are **brought into the ready queue** | **Seconds to minutes** | May be slow |
+| **Medium-term** | — | Which process to **swap out** of memory | As needed | — |
+
+Notes that follow from the table <SlideRef n={23} chapter={3} />:
+
+- The short-term scheduler is **sometimes the only scheduler** in a system.
+
+- The long-term scheduler **controls the degree of multiprogramming** — how many processes are in memory at once. That is why it can afford to be slow: it runs rarely, and each decision lasts a long time.
+
+- The **medium-term** scheduler is added when the degree of multiprogramming needs to **decrease**. It removes a process from memory and stores it on disk, bringing it back later to continue — **swapping**.
+
+<Callout type="note">
+  A useful way to hold the three apart: the **long-term** scheduler controls *how many* processes
+  compete, the **short-term** scheduler controls *which one* wins right now, and the **medium-term**
+  scheduler is the pressure valve that reduces the competition when memory gets tight.
+</Callout>
+
+## Process Creation
+
+<Lead from={26} to={27} chapter={3}>A process creates children, those children create their own, and the result is a tree — built in UNIX by fork, exec, and wait.</Lead>
+
+A **parent** process creates **children**, which in turn create other processes, forming a **tree of processes**. Each is identified and managed by a **process identifier (pid)** — a positive integer assigned **sequentially** by the OS as processes are created <SlideRef from={26} to={31} chapter={3} />.
+
+Creating a process raises three questions, and each has a range of answers <SlideRef from={26} to={27} chapter={3} />:
+
+| Question | Options |
+| --- | --- |
+| **Resource sharing** | Parent and child share **all** resources · child shares a **subset** · they share **nothing** |
+| **Execution** | Parent and child execute **concurrently** · parent **waits** until the child terminates |
+| **Address space** | Child is a **duplicate** of the parent · child has a **new program** loaded into it |
+
+UNIX answers them with three system calls <SlideRef n={27} chapter={3} />:
+
+- **`fork()`** — creates a new process as a **duplicate** of the caller.
+
+- **`exec()`** — used **after** a `fork()` to replace the process's memory space with a **new program**.
+
+- **`wait()`** — the parent blocks until the child terminates.
+
+### Every process has a parent
+
+Run a program from the terminal and you get **at least two** related processes, not one: the **shell creates a new process**, and that new process **executes the program** <SlideRef n={31} chapter={3} />. A process can always ask who it is and who made it:
+
+```c title="show-pid.c" {5,6}
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void) {
+  printf("The process ID is %d\n", (int) getpid());
+  printf("The parent process ID is %d\n", (int) getppid());
+  return 0;
+}
+```
+
+<Callout type="note">
+  `getpid()` returns this process's ID; `getppid()` returns its **parent's**. Run the program twice
+  and the PID changes — PIDs are handed out sequentially as processes are created — while the parent
+  PID stays the same, because the same shell launched both.
+</Callout>
+
+### Counting forks
+
+The exam question this chapter always asks: given a chain of `fork()` calls, **how many processes exist**? <SlideRef from={33} to={34} chapter={3} />
+
+```c title="three-forks.c" {5,6,7}
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void) {
+  fork();
+  fork();
+  fork();
+  return 0;
+}
+```
+
+The rule is simple once stated: **`fork()` returns twice**, so every process alive when the call is reached becomes **two**. Each `fork()` therefore **doubles** the population.
+
+| After | Processes | Why |
+| --- | --- | --- |
+| Start | 1 | Just `main` |
+| 1st `fork()` | 2 | 1 × 2 |
+| 2nd `fork()` | 4 | 2 × 2 — the child forks too |
+| 3rd `fork()` | 8 | 4 × 2 |
+
+So *n* unconditional forks produce **2ⁿ** processes, of which **2ⁿ − 1** are children of someone. The trap is forgetting that a child created by the first `fork()` goes on to execute the *second* and *third* calls as well — it resumes at the instruction after the fork it was born from, not at the top of `main`.
+
+Now make it conditional <SlideRef n={34} chapter={3} />:
+
+```c title="conditional-fork.c" {5,6,7,9,10}
+#include <stdio.h>
+#include <unistd.h>
+
+int main(void) {
+  int x;
+  x = fork();
+  x = fork();
+  x = fork();
+  if (x == 0)
+    fork();
+  return 0;
+}
+```
+
+Here `x` holds the return value of the **third** `fork()` only — the first two assignments are overwritten. `x == 0` is true in exactly the processes that were **created by the third fork**, which is half of the eight, so **4 more** processes are created: **12 in total**.
+
+## Process Termination
+
+<Lead from={35} to={36} chapter={3}>A process ends by asking the OS to delete it — and how its parent responds decides whether it becomes a zombie, an orphan, or is simply reaped.</Lead>
+
+A process executes its last statement and then asks the OS to delete it with the **`exit()`** system call. That call **returns status data from the child to the parent** (retrieved via `wait()`), and the process's **resources are deallocated** by the operating system <SlideRef n={35} chapter={3} />.
+
+A parent may also terminate a child **itself**, using **`abort()`**. Reasons to do so <SlideRef n={35} chapter={3} />:
+
+- The child has **exceeded its allocated resources**.
+
+- The task assigned to the child is **no longer required**.
+
+- The **parent is exiting**, and the OS does not allow a child to continue if its parent terminates.
+
+That last reason has a name: **cascading termination** <SlideRef n={36} chapter={3} />. Some operating systems do not allow a child to exist once its parent has terminated, so when a process ends, **all** its children, grandchildren, and so on down the tree are terminated too — and it is the **operating system** that initiates it, not the parent.
+
+The parent collects a child's result with `wait()`, which returns both **status information** and the **pid** of the terminated process <SlideRef n={36} chapter={3} />:
+
+```c title="reaping a child"
+pid = wait(&status);
+```
+
+What happens when the parent doesn't do that is the classic pair <SlideRef n={36} chapter={3} />:
+
+| Term | Situation |
+| --- | --- |
+| **Zombie** | The child has terminated, but **no parent is waiting** — it never called `wait()`. The process is dead but its entry lingers. |
+| **Orphan** | The **parent terminated without calling `wait()`**, leaving the child running with no parent to report to. |
+
+<Callout type="note">
+  Keep the two straight by asking **who died first**. A **zombie** is a dead *child* whose living
+  parent hasn't collected it. An **orphan** is a living *child* whose parent is already gone. The
+  zombie's problem is an uncollected status; the orphan's problem is a missing parent.
+</Callout>
+
+## Multiprocess Architecture — the Chrome Browser
+
+<Lead n={37} chapter={3}>Chrome puts each website in its own process, so one bad page can't take the browser down with it.</Lead>
+
+Many web browsers ran — and some still run — as a **single process**, which means that if one website causes trouble, the **entire browser can hang or crash** <SlideRef n={37} chapter={3} />. Google Chrome is **multiprocess**, with three types of process:
+
+| Process type | Responsibility |
+| --- | --- |
+| **Browser** | Manages the **user interface**, disk and network I/O. One per browser. |
+| **Renderer** | Renders web pages — HTML, JavaScript. **A new one for each website opened.** |
+| **Plug-in** | One **for each type** of plug-in in use. |
+
+Renderer processes run in a **sandbox** that restricts disk and network I/O, **minimizing the effect of security exploits** <SlideRef n={37} chapter={3} />.
+
+<Callout type="note">
+  This is the chapter's argument for processes made concrete. Isolation is not free — every renderer
+  is a full process with its own address space, which is exactly why Chrome uses so much memory —
+  but it buys a fault boundary: a crash is contained to one tab, and a compromised renderer still
+  has to escape the sandbox to reach the disk.
+</Callout>
+
+## Interprocess Communication
+
+<Lead from={38} to={39} chapter={3}>Processes that need to affect each other must communicate, and there are only two ways to do it — share memory, or pass messages.</Lead>
+
+Processes within a system are either **independent** or **cooperating**. A **cooperating** process can affect or be affected by other processes, including by **sharing data** — and cooperating processes need **interprocess communication (IPC)** <SlideRef n={38} chapter={3} />. There are two models <SlideRef from={38} to={39} chapter={3} />:
+
+| Model | How data moves | Who controls it | Speed |
+| --- | --- | --- | --- |
+| **Shared memory** | Both processes map a **common region of memory** and read/write it directly | The **user processes**, not the OS | Fast — no kernel involvement per access |
+| **Message passing** | Processes **send** and **receive** discrete messages through the kernel | The **operating system** | Slower — a system call per message |
+
+In the **shared-memory** model, an area of memory is shared among the processes that wish to communicate, and the communication is **under the control of the user processes, not the operating system** <SlideRef n={41} chapter={3} />. That freedom is also the problem: the major issue is providing a mechanism that lets the user processes **synchronize their actions** when they access shared memory — the subject of Chapters 6 and 7.
+
+### The producer–consumer problem
+
+The standard paradigm for cooperating processes: a **producer** process produces information that is consumed by a **consumer** process <SlideRef n={40} chapter={3} />. It comes in two variations:
+
+| Variation | Producer | Consumer |
+| --- | --- | --- |
+| **Unbounded buffer** | **Never waits** — no practical limit on buffer size | Waits if there is nothing to consume |
+| **Bounded buffer** | **Must wait** if all buffers are full | Waits if there is nothing to consume |
+
+Both variations make the consumer wait on an empty buffer. Only the **bounded** variation makes the producer wait too, because only a fixed-size buffer can be full.
+
+### Race conditions
+
+<Lead n={42} chapter={3}>Two processes updating one shared counter can each be correct on their own and still leave it wrong.</Lead>
+
+Suppose a shared `counter` tracks how many items are in the buffer. The producer increments it and the consumer decrements it. In machine terms, neither operation is a single step <SlideRef n={42} chapter={3} />:
+
+```c title="counter++ and counter-- are three steps each" {2,3,4,7,8,9}
+/* counter++ could be implemented as */
+register1 = counter;
+register1 = register1 + 1;
+counter   = register1;
+
+/* counter-- could be implemented as */
+register2 = counter;
+register2 = register2 - 1;
+counter   = register2;
+```
+
+Because each is **three instructions**, the two can interleave. Starting from `counter = 5` <SlideRef n={42} chapter={3} />:
+
+| Step | Who | Executes | Result |
+| --- | --- | --- | --- |
+| S0 | Producer | `register1 = counter` | `register1 = 5` |
+| S1 | Producer | `register1 = register1 + 1` | `register1 = 6` |
+| S2 | Consumer | `register2 = counter` | `register2 = 5` |
+| S3 | Consumer | `register2 = register2 - 1` | `register2 = 4` |
+| S4 | Producer | `counter = register1` | **`counter = 6`** |
+| S5 | Consumer | `counter = register2` | **`counter = 4`** |
+
+One increment and one decrement were applied to a counter of 5, so the correct answer is **5**. This interleaving produces **4**. Swap the last two steps and it produces **6**. The value depends on the **order** in which the processes happen to run — that is a **race condition**.
+
+<Callout type="note">
+  The damage is done at **S2**, where the consumer reads `counter` while the producer is mid-update
+  and gets the **stale** value 5. Everything after that is one process's work being silently thrown
+  away by the other's write-back. Note that no instruction here is wrong; each process is individually
+  correct. The bug lives in the **interleaving**, which is why it is intermittent, hard to reproduce,
+  and why Chapter 6 exists.
+</Callout>
+
+<Callout type="key">
+  **Key takeaways:** a **program** is a passive file, a **process** is that program in execution,
+  laid out in memory as **text, data, heap, and stack** and described to the kernel by a **PCB**
+  holding its PID, state, program counter, registers, and resources. A process moves through
+  **new → ready → running → waiting → terminated**, where only *running* is on a CPU and *waiting*
+  must return through *ready*. Swapping processes on the CPU is a **context switch**: pure overhead,
+  proportional to PCB size. Processes are chosen by three schedulers — **short-term** (milliseconds,
+  which ready process runs), **long-term** (the degree of multiprogramming), and **medium-term**
+  (swapping). New processes come from **`fork()`**, which returns twice and so **doubles** the
+  process count each time it is called; **`exec()`** replaces the image, **`wait()`** collects the
+  child, and **`exit()`** ends it — leaving a **zombie** if no parent waits, an **orphan** if the
+  parent dies first. Cooperating processes communicate by **shared memory** (fast, user-controlled,
+  needs synchronization) or **message passing** (kernel-mediated), and unsynchronized shared access
+  produces a **race condition** where the final value depends on the interleaving.
+</Callout>
