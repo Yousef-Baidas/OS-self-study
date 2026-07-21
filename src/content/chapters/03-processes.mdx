@@ -27,6 +27,8 @@ import ForkTree from '../../widgets/ch03/ForkTree.svelte';
 
 import Lead from '../../components/Lead.astro';
 
+import RaceCondition from '../../widgets/ch03/RaceCondition.svelte';
+
 import SlideRef from '../../components/SlideRef.astro';
 
 import StateTrace from '../../widgets/ch03/StateTrace.svelte';
@@ -482,6 +484,8 @@ Because each is **three instructions**, the two can interleave. Starting from `c
 | S5 | Consumer | `counter = register2` | **`counter = 4`** |
 
 One increment and one decrement were applied to a counter of 5, so the correct answer is **5**. This interleaving produces **4**. Swap the last two steps and it produces **6**. The value depends on the **order** in which the processes happen to run — that is a **race condition**.
+
+<RaceCondition client:visible />
 
 <Callout type="note">
   The damage is done at **S2**, where the consumer reads `counter` while the producer is mid-update
