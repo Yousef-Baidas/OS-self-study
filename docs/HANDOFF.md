@@ -78,7 +78,8 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
 | --- | --- |
 | Chapter content (MDX) | `src/content/chapters/NN-*.mdx` |
 | Notes components | `src/components/{SlideRef,Lead,Callout,Figure}.astro` |
-| Figures (inline SVG) | `src/assets/figures/<ch>/*.svg` |
+| Figures (inline SVG) | `src/assets/figures/<ch>/*.svg` — rules in **`docs/FIGURES.md`** |
+| Figure contact sheet | `/dev/figures` (dev only) — every figure on one page, for verifying |
 | Sims (per chapter) | `src/widgets/<ch>/*.svelte` + sibling `*.ts` content data |
 | Exam questions | `src/content/questions/<ch>.json` (schema in `src/content.config.ts`) |
 | Exam logic | `src/lib/exam-engine.ts` (grading, queue, scoring), `src/lib/progress-store.ts` (persistence) |
@@ -120,6 +121,15 @@ join the same generation, giving 8 processes after two calls instead of 4. `clon
    guided/explore toggle, the step strip, Previous/Step/Reset, and the roving-tabindex keyboard
    model — a new sim supplies only its canvas. Put step/content data in a sibling
    `src/widgets/ch03/*.ts` and unit-test its shape, matching the five existing data modules.
+
+   ⚠️ **`ForkTree` and `StateTrace` draw SVG, so read `docs/FIGURES.md` first.** It is the
+   canonical diagram spec and it applies to sim canvases exactly as it does to the static
+   chapter figures. The Chapter 3 figures had to be redrawn once already (`7676974`) because
+   they were built without it — orthogonal connectors meeting edge midpoints, endpoints that
+   are literally node edge coordinates, tiled regions square, labels in gutters no line crosses.
+   In a sim you get this nearly free: derive positions and connector paths from the layout
+   function in `src/lib/` and unit-test that endpoints equal node edges, instead of asserting
+   coordinates by hand the way a static `.svg` has to. Verify on `/dev/figures` in both themes.
    - **`ForkTree`** — slides 33–34, the chapter's recurring exam question. Guided steps through
      1 → 2 → 4 → 8 as each `fork()` doubles the population; Explore toggles the trailing
      `if (x == 0) fork();` to reach 12. Logic is already scaffolded in `src/lib/fork-tree.ts`

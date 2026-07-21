@@ -351,23 +351,12 @@ hr {
    inlined into the page (Figure.astro), these classes let every diagram track the
    design tokens and the light/dark toggle instead of baking in a static palette.
 
-   Drawing conventions these classes assume — nothing in the build checks a figure's
-   geometry, so a diagram compiles clean and still renders wrong. Keeping to these
-   makes a figure reviewable by reading its numbers:
-
-     · Connectors are ORTHOGONAL, leaving and entering boxes perpendicular to an edge
-       MIDPOINT, with 10-unit quarter-arc corners. Every endpoint is literally a box
-       edge coordinate, which is why the arrow markers use refX = the tip's own x:
-       the arrowhead point then lands exactly on the path's last coordinate.
-     · TILED regions (a contiguous address space, a contiguous timeline) are square
-       and share edges; DISCRETE nodes are rounded. Rounded corners on abutting
-       segments pinch into lens-shaped gaps at every seam.
-     · Edge labels live in gutters no connector passes through — never on a line.
-     · The viewBox is the measured content bounding box plus a ~24-unit margin, so
-       origins are often non-zero. Figure.astro already pads the plate; padding again
-       inside the viewBox shrinks the diagram on phones for no reason. Re-measure with
-       svg.getBBox() (the /dev/figures contact sheet is the quickest way) rather than
-       estimating text widths by hand. */
+   These classes are only half the system — the geometry rules that go with them live in
+   docs/FIGURES.md, which is canonical. Read it before drawing a figure or a sim canvas.
+   In short: orthogonal connectors meeting edge midpoints, endpoints that are literally
+   box edge coordinates, tiled regions square and discrete nodes rounded, labels in
+   gutters no line crosses, and a viewBox measured with getBBox() rather than estimated.
+   Nothing in the build checks any of it, so a wrong diagram ships silently. */
 .fg-node {
   fill: var(--color-surface-raised);
 

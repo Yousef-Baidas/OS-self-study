@@ -69,3 +69,11 @@ keyboard model, the exam flow, resume-after-reload — is verified in a real bro
 worth remembering: Svelte 5's delegated click handlers do not fire from synthetic
 `dispatchEvent`, so drive real clicks; and patching `localStorage` then reloading loses the
 patch, because a reload is a fresh JS context.
+
+Diagrams are a third blind spot, and the widest one: no tool in the pipeline checks a figure's
+geometry, so a connector pointing at empty space or a label sitting on a line compiles clean and
+ships. **`docs/FIGURES.md`** is the canonical spec — it applies to the static SVGs in
+`src/assets/figures/` and to any SVG a sim draws. `/dev/figures` (dev only) inlines every figure
+on one page for a both-themes pass. When a sim draws its own canvas, derive the geometry from a
+layout function in `lib/` and unit-test that connector endpoints equal node edges: that turns the
+one class of defect the build cannot catch into one it can.
