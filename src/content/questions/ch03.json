@@ -1,0 +1,366 @@
+[
+  {
+    "id": "ch03-q01",
+    "chapter": "processes",
+    "topic": "Program vs process vs thread",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "What is the difference between a program and a process?",
+    "choices": [
+      "A program is a passive file on disk; a process is that program in execution, loaded into memory",
+      "A program runs in user mode; a process runs in kernel mode",
+      "A program is written in a high-level language; a process is machine code",
+      "A program belongs to the user; a process belongs to the operating system"
+    ],
+    "answer": 0,
+    "solution": "A program is a passive entity — a list of instructions stored in an executable file on disk. A process is an active entity: that same program loaded into memory and executing. The program becomes a process when it is loaded, which happens the ordinary ways (a mouse click, a shell command).",
+    "source": "Lecture slide 2"
+  },
+  {
+    "id": "ch03-q02",
+    "chapter": "processes",
+    "topic": "Program vs process vs thread",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "One program can be running as several processes at the same time.",
+    "answer": "true",
+    "solution": "True. Open the same browser twice and you have two processes running one program. This does not contradict the rule that a single process executes sequentially — sequential applies within one process, while many processes run at once across the system.",
+    "source": "Lecture slide 2"
+  },
+  {
+    "id": "ch03-q03",
+    "chapter": "processes",
+    "topic": "A process in memory",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "Which pair of memory regions grows and shrinks while a process runs, rather than being fixed at load time?",
+    "choices": [
+      "Text and data",
+      "Heap and stack",
+      "Text and stack",
+      "Data and heap"
+    ],
+    "answer": 1,
+    "solution": "Text (the read-only program code) and data (global variables) are both fixed in size at load time. The heap grows and shrinks as memory is allocated dynamically at run time, and the stack grows and shrinks with function calls — it holds parameters, return addresses, and local variables.",
+    "source": "Lecture slide 4"
+  },
+  {
+    "id": "ch03-q04",
+    "chapter": "processes",
+    "topic": "A process in memory",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "The heap and the stack grow toward each other through the free space between them.",
+    "answer": "true",
+    "solution": "True. The heap grows upward from the end of the data section and the stack grows downward from high addresses, sharing the gap in between. That is what lets a process allocate at run time without deciding its size up front — and why a runaway recursion or an unbounded allocation eventually collides with the other.",
+    "source": "Lecture slide 4"
+  },
+  {
+    "id": "ch03-q05",
+    "chapter": "processes",
+    "topic": "The Process Control Block",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "What does the program counter stored in a process's PCB hold?",
+    "choices": [
+      "The number of instructions the process has executed so far",
+      "The address of the next instruction to execute",
+      "The address at which the process was loaded into memory",
+      "How many times the process has been scheduled"
+    ],
+    "answer": 1,
+    "solution": "The program counter holds the address of the next instruction to execute. Together with the CPU registers it is the process's execution position — lose it and the process cannot be resumed where it left off, only restarted.",
+    "source": "Lecture slide 7"
+  },
+  {
+    "id": "ch03-q06",
+    "chapter": "processes",
+    "topic": "The Process Control Block",
+    "type": "short",
+    "difficulty": "medium",
+    "prompt": "In one sentence, say what question the list of PCB fields is the answer to.",
+    "answer": "What would you have to write down about a running process so you could stop it, run something else, and later resume it as if nothing had happened?",
+    "solution": "Every PCB field exists because a context switch would otherwise lose it: the PID identifies the process, the state and program counter and registers record exactly where it was, and the scheduling, memory, accounting, and I/O fields record what it owns. Read the table as the answer to \"what must be saved to resume this later?\"",
+    "source": "Lecture slide 7"
+  },
+  {
+    "id": "ch03-q07",
+    "chapter": "processes",
+    "topic": "Process states",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "A process is in the ready state. What distinguishes it from a process in the waiting state?",
+    "choices": [
+      "A ready process has been admitted to memory; a waiting process has not",
+      "A ready process could run right now but was not the one the scheduler picked; a waiting process could not run even if the CPU were free",
+      "A ready process has higher priority than a waiting process",
+      "A ready process is in the job queue; a waiting process is in the ready queue"
+    ],
+    "answer": 1,
+    "solution": "Ready means \"willing and able, but not chosen\" — the process could be dispatched immediately if the scheduler picked it. Waiting means \"not able\": the process is blocked on an event, typically I/O, and could not use the CPU even if it were idle.",
+    "source": "Lecture slide 8"
+  },
+  {
+    "id": "ch03-q08",
+    "chapter": "processes",
+    "topic": "Process states",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "When a process's I/O completes, it moves directly from waiting back to running.",
+    "answer": "false",
+    "solution": "False. A woken process moves from waiting to ready and queues up like everyone else. The only arrow entering running is scheduler dispatch, so being dispatched again is the only way back onto the CPU.",
+    "source": "Lecture slide 8"
+  },
+  {
+    "id": "ch03-q09",
+    "chapter": "processes",
+    "topic": "Process states",
+    "type": "short",
+    "difficulty": "medium",
+    "prompt": "Running → ready and running → waiting are both exits from the CPU. What is the difference in why they happen?",
+    "answer": "Running → ready is involuntary — an interrupt, typically the time quantum expiring, shoves the process off the CPU. Running → waiting is voluntary — the process asked to wait by issuing an I/O request.",
+    "solution": "The asymmetry is worth naming: one transition is done to the process and the other is done by it. A preempted process is still perfectly able to run, which is why it goes to ready; a process that requested I/O cannot proceed, which is why it goes to waiting.",
+    "source": "Lecture slide 8"
+  },
+  {
+    "id": "ch03-q10",
+    "chapter": "processes",
+    "topic": "Process states",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "Under round-robin scheduling, a process always holds the CPU for the full length of its time quantum.",
+    "answer": "false",
+    "solution": "False. A quantum is an upper bound on a turn, not a fixed length. In the worked example P1 has only 2 ms of its burst left at 12 ms, so it gives the CPU back at 14 ms rather than running the full 4 ms — a process hands the CPU back the instant it blocks or finishes, whichever comes first.",
+    "source": "Lecture slides 13–14"
+  },
+  {
+    "id": "ch03-q11",
+    "chapter": "processes",
+    "topic": "Process states",
+    "type": "mcq",
+    "difficulty": "hard",
+    "prompt": "In the worked round-robin example (quantum 4 ms), what are the states of P1, P2, and P3 at 15 ms?",
+    "choices": [
+      "P1 ready, P2 running, P3 ready",
+      "P1 waiting, P2 running, P3 ready",
+      "P1 waiting, P2 ready, P3 running",
+      "P1 running, P2 ready, P3 waiting"
+    ],
+    "answer": 1,
+    "solution": "P1 finished its first burst at 14 ms and blocked on I/O until 18, so at 15 ms it is waiting. P2 was dispatched at 14 and runs until 18. P3 still has 1 ms of its first burst left and is sitting in the ready queue. This row is the clearest illustration of ready versus waiting: P3 could run, P1 could not.",
+    "source": "Lecture slide 14"
+  },
+  {
+    "id": "ch03-q12",
+    "chapter": "processes",
+    "topic": "Context switch",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "During a context switch the system does no useful work.",
+    "answer": "true",
+    "solution": "True. Context-switch time is pure overhead: the old process's state is saved into its PCB and the new process's state is loaded from its own, and both processes are idle for the duration. The cost grows with how much state the OS keeps per process, and shrinks when hardware provides multiple register sets per CPU.",
+    "source": "Lecture slide 15"
+  },
+  {
+    "id": "ch03-q13",
+    "chapter": "processes",
+    "topic": "Context switch",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Why not simply use a very small time quantum, such as 1 ms, so that every process feels responsive?",
+    "choices": [
+      "Because the ready queue can only hold a fixed number of processes",
+      "Because a context switch costs a fixed amount of time, so the smaller the quantum the larger the fraction of each slice spent switching rather than computing",
+      "Because the PCB cannot be saved that quickly",
+      "Because the short-term scheduler only runs every few seconds"
+    ],
+    "answer": 1,
+    "solution": "The switch itself has a roughly fixed cost that does not shrink with the quantum. Halving the quantum doubles how often that cost is paid, so overhead rises as a proportion of useful work. Quantum choice is a trade between responsiveness and throughput.",
+    "source": "Lecture slides 15–16"
+  },
+  {
+    "id": "ch03-q14",
+    "chapter": "processes",
+    "topic": "Threads and task_struct",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Linux's task_struct contains parent and children fields that have no row of their own in the PCB table. What do they make possible?",
+    "choices": [
+      "Representing the process tree",
+      "Sharing an address space between processes",
+      "Recording how much CPU time the process has used",
+      "Storing more than one program counter"
+    ],
+    "answer": 0,
+    "solution": "Most task_struct fields map straight onto PCB rows — pid, state, time_slice, files, mm. The parent pointer and children list are the extra ones, and they are what makes the tree of processes representable: every process knows who created it and what it has created.",
+    "source": "Lecture slide 18"
+  },
+  {
+    "id": "ch03-q15",
+    "chapter": "processes",
+    "topic": "Scheduling queues and schedulers",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "The three schedulers are told apart mainly by how often they run. Which ordering is correct, from most frequent to least?",
+    "choices": [
+      "Long-term (seconds to minutes), medium-term (as needed), short-term (milliseconds)",
+      "Short-term (every few milliseconds), medium-term (as needed), long-term (seconds to minutes)",
+      "Medium-term (milliseconds), short-term (seconds), long-term (minutes)",
+      "They all run at roughly the same rate, on every context switch"
+    ],
+    "answer": 1,
+    "solution": "The short-term (CPU) scheduler picks which ready process runs next and is invoked every few milliseconds, so it must be fast. The medium-term scheduler swaps processes out of memory as needed. The long-term (job) scheduler decides which processes enter the ready queue and runs only every few seconds to minutes, so it can afford to be slow.",
+    "source": "Lecture slide 23"
+  },
+  {
+    "id": "ch03-q16",
+    "chapter": "processes",
+    "topic": "Scheduling queues and schedulers",
+    "type": "short",
+    "difficulty": "medium",
+    "prompt": "Which scheduler controls the degree of multiprogramming, and why can it afford to be slow?",
+    "answer": "The long-term (job) scheduler. It controls how many processes are in memory at once, and because it runs rarely — every few seconds to minutes — and each decision lasts a long time, it can take longer to decide.",
+    "solution": "The long-term scheduler decides which processes are brought into the ready queue, which is exactly the degree of multiprogramming. Contrast it with the short-term scheduler, which runs every few milliseconds and therefore must be fast. The medium-term scheduler is the pressure valve: it swaps a process out to disk when the degree of multiprogramming needs to decrease.",
+    "source": "Lecture slide 23"
+  },
+  {
+    "id": "ch03-q17",
+    "chapter": "processes",
+    "topic": "Scheduling queues and schedulers",
+    "type": "true-false",
+    "difficulty": "easy",
+    "prompt": "Swapping — removing a process from memory, storing it on disk, and bringing it back later — is the job of the medium-term scheduler.",
+    "answer": "true",
+    "solution": "True. The medium-term scheduler is added when the degree of multiprogramming must decrease. It removes a process from memory, stores it on disk, and later brings it back to continue where it left off.",
+    "source": "Lecture slide 23"
+  },
+  {
+    "id": "ch03-q18",
+    "chapter": "processes",
+    "topic": "Process creation — fork, exec, wait",
+    "type": "numeric",
+    "difficulty": "easy",
+    "prompt": "How many processes exist in total after a program executes three consecutive unconditional fork() calls (counting the original)?",
+    "answer": 8,
+    "solution": "Each fork() returns twice, so every process alive when the call is reached becomes two: the population doubles at each call. 1 → 2 → 4 → 8, which is 2³. The trap is forgetting that a child created by the first fork() goes on to execute the second and third calls too — it resumes at the instruction after the fork it was born from, not at the top of main.",
+    "source": "Lecture slide 33"
+  },
+  {
+    "id": "ch03-q19",
+    "chapter": "processes",
+    "topic": "Process creation — fork, exec, wait",
+    "type": "numeric",
+    "difficulty": "hard",
+    "prompt": "A program runs three unconditional fork() calls, assigning the last one's return value to x, then executes `if (x == 0) fork();`. How many processes exist in total?",
+    "answer": 12,
+    "solution": "The three unconditional calls give 8 processes. x holds the return value of the third fork() only, and fork() returns 0 in the child — so x == 0 is true in exactly the processes the third call created, which is half of the eight. Those 4 fork once more, adding 4: 8 + 4 = 12.",
+    "source": "Lecture slide 34"
+  },
+  {
+    "id": "ch03-q20",
+    "chapter": "processes",
+    "topic": "Process creation — fork, exec, wait",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "After fork() returns, where does the newly created child process begin executing?",
+    "choices": [
+      "At the top of main(), like a freshly launched program",
+      "At the instruction immediately after the fork() that created it",
+      "At the first instruction of the parent's next function call",
+      "It does not execute until the parent calls exec()"
+    ],
+    "answer": 1,
+    "solution": "The child is a duplicate of the parent, including its program counter, so it resumes at the instruction after the fork() call — with fork() returning 0 to it and the child's pid to the parent. This is exactly why a child created by an early fork() goes on to execute the later ones, and why the population doubles rather than growing by one.",
+    "source": "Lecture slides 27, 33"
+  },
+  {
+    "id": "ch03-q21",
+    "chapter": "processes",
+    "topic": "Process termination — zombies and orphans",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "Which pair correctly describes a zombie and an orphan?",
+    "choices": [
+      "Zombie: a child still running after its parent terminated. Orphan: a terminated child whose parent never called wait()",
+      "Zombie: a terminated child whose parent has not called wait(). Orphan: a child still running after its parent terminated without calling wait()",
+      "Both describe a process whose parent has terminated; they differ only in the operating system that names them",
+      "Zombie: a process swapped out to disk. Orphan: a process with no open files"
+    ],
+    "answer": 1,
+    "solution": "Ask who died first. A zombie is a dead child whose living parent has not collected its status with wait() — the process is finished but its entry lingers. An orphan is a living child whose parent is already gone. The zombie's problem is an uncollected status; the orphan's is a missing parent.",
+    "source": "Lecture slide 36"
+  },
+  {
+    "id": "ch03-q22",
+    "chapter": "processes",
+    "topic": "Process termination — zombies and orphans",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "In cascading termination, it is the parent process that terminates all of its descendants before exiting.",
+    "answer": "false",
+    "solution": "False. Cascading termination is initiated by the operating system, not by the parent. On systems that do not allow a child to exist once its parent has terminated, the OS terminates all the children, grandchildren, and so on down the tree when a process ends.",
+    "source": "Lecture slide 36"
+  },
+  {
+    "id": "ch03-q23",
+    "chapter": "processes",
+    "topic": "Interprocess communication",
+    "type": "mcq",
+    "difficulty": "easy",
+    "prompt": "In Google Chrome's multiprocess architecture, how many renderer processes are created?",
+    "choices": [
+      "One per browser window",
+      "One for each website opened",
+      "One for each type of plug-in in use",
+      "Exactly one, shared by every tab"
+    ],
+    "answer": 1,
+    "solution": "Chrome runs one browser process (user interface, disk and network I/O), a new renderer process for each website opened, and one plug-in process for each type of plug-in in use. Renderers run in a sandbox restricting disk and network I/O, which minimises the effect of security exploits — a crash or compromise is contained to one site.",
+    "source": "Lecture slide 37"
+  },
+  {
+    "id": "ch03-q24",
+    "chapter": "processes",
+    "topic": "Interprocess communication",
+    "type": "mcq",
+    "difficulty": "medium",
+    "prompt": "In the shared-memory model of IPC, who controls the communication?",
+    "choices": [
+      "The operating system, which copies each message between the processes",
+      "The user processes themselves, not the operating system",
+      "The short-term scheduler",
+      "The kernel, via one system call per access"
+    ],
+    "answer": 1,
+    "solution": "Once the shared region is established, reads and writes to it are under the control of the user processes rather than the OS — which is why it is fast, with no kernel involvement per access. That freedom is also the problem: nothing synchronises the processes, so they must do it themselves. Message passing is the opposite trade — the OS controls it, at the cost of a system call per message.",
+    "source": "Lecture slides 39, 41"
+  },
+  {
+    "id": "ch03-q25",
+    "chapter": "processes",
+    "topic": "Race conditions",
+    "type": "true-false",
+    "difficulty": "medium",
+    "prompt": "In the bounded-buffer producer–consumer problem, only the consumer ever has to wait.",
+    "answer": "false",
+    "solution": "False. Both variations make the consumer wait when there is nothing to consume, but the bounded-buffer variation also makes the producer wait when all buffers are full. Only the unbounded variation lets the producer never wait, because only a fixed-size buffer can be full.",
+    "source": "Lecture slide 40"
+  },
+  {
+    "id": "ch03-q26",
+    "chapter": "processes",
+    "topic": "Race conditions",
+    "type": "mcq",
+    "difficulty": "hard",
+    "prompt": "Starting from counter = 5, the producer executes `register1 = counter` then `register1 = register1 + 1`, and the consumer then executes `register2 = counter`. At which step is the damage already done, and why?",
+    "choices": [
+      "At the producer's `counter = register1`, because it writes before the consumer",
+      "At the consumer's `register2 = counter`, because it reads a counter the producer is mid-way through updating and gets the stale value 5",
+      "At the consumer's `register2 = register2 - 1`, because the subtraction uses the wrong operand",
+      "At the producer's `register1 = register1 + 1`, because the increment is not atomic"
+    ],
+    "answer": 1,
+    "solution": "The consumer's load takes a private copy of counter while the producer has computed 6 but not yet stored it, so the consumer starts from a value that is already out of date. Everything after that is one process's work being silently thrown away by the other's write-back — the final counter is 4 or 6 instead of 5, depending on which store lands last. No individual instruction is wrong; the bug lives in the interleaving, which is what makes it a race condition.",
+    "source": "Lecture slide 42"
+  }
+]
