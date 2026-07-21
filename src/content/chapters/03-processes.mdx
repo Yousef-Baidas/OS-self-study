@@ -29,6 +29,8 @@ import Lead from '../../components/Lead.astro';
 
 import SlideRef from '../../components/SlideRef.astro';
 
+import StateTrace from '../../widgets/ch03/StateTrace.svelte';
+
 <Callout type="key">
   **By the end of this chapter you can:** say precisely what separates a **program** from a
   **process**; name the four regions of a process's **memory image** and what lives in each; list
@@ -177,6 +179,8 @@ The solution, one row per interval <SlideRef n={14} chapter={3} />:
   quantum runs out. A quantum is an **upper bound** on a turn, not a fixed length. The same thing
   happens to P3 at **18 – 19** with 1 ms remaining.
 </Callout>
+
+<StateTrace client:visible />
 
 ## Context Switch
 
