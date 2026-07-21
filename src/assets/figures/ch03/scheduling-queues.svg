@@ -1,78 +1,87 @@
-<svg viewBox="0 0 620 360" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="36 16 628 346" xmlns="http://www.w3.org/2000/svg">
   <!-- Queueing diagram of process scheduling (slides 19-22). Every branch off the CPU
        that is not termination comes back to the ready queue via the return rail on the
        left — that single shape is what "processes migrate among the queues" means, and
-       it is why `waiting` cannot re-enter `running` directly. -->
+       it is why `waiting` cannot re-enter `running` directly.
+
+       Geometry contract: one trunk drops from the CPU at x=410; four branches leave it
+       on a uniform 56px rhythm; every event box shares the same left/right edge
+       (150 / 340); every return runs to the rail at x=60. All four branch labels are
+       left-aligned in the empty gutter right of the trunk, so no label ever crosses a
+       line. "time slice expired" has no box because in the source figure it is an edge,
+       not a queue — the process goes straight back to ready. -->
   <defs>
-    <marker id="arw-sq" markerWidth="12" markerHeight="12" refX="7" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M0,0 L9,3.5 L0,7 Z" class="fg-arrow" />
+    <marker id="arw-sq" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,4 L0,8 Z" class="fg-arrow" />
     </marker>
   </defs>
 
-  <!-- ready queue -->
-  <rect x="88" y="36" width="182" height="52" rx="10" class="fg-node-accent" />
+  <!-- ── top row: ready queue -> CPU -> terminated ─────────────────────────── -->
+  <rect x="120" y="40" width="180" height="56" rx="10" class="fg-node-accent" />
 
-  <text x="179" y="60" text-anchor="middle" class="fg-text" font-size="14">ready queue</text>
+  <text x="210" y="64" text-anchor="middle" class="fg-text" font-size="14">ready queue</text>
 
-  <text x="179" y="78" text-anchor="middle" class="fg-text-muted" font-size="10.5">in memory, able to run</text>
+  <text x="210" y="82" text-anchor="middle" class="fg-text-muted" font-size="10.5">in memory, able to run</text>
 
-  <!-- dispatch -->
-  <path d="M270 62 L364 62" class="fg-line" marker-end="url(#arw-sq)" />
+  <path d="M300 68 H360" class="fg-line" marker-end="url(#arw-sq)" />
 
-  <text x="317" y="52" text-anchor="middle" class="fg-text-muted" font-size="10.5">dispatch</text>
+  <text x="330" y="56" text-anchor="middle" class="fg-text-muted" font-size="10.5">dispatch</text>
 
-  <!-- the CPU -->
-  <rect x="372" y="36" width="88" height="52" rx="10" class="fg-node-strong" />
+  <rect x="360" y="40" width="100" height="56" rx="10" class="fg-node-strong" />
 
-  <text x="416" y="68" text-anchor="middle" class="fg-text" font-size="15">CPU</text>
-
-  <!-- trunk down from the CPU, feeding every branch -->
-  <path d="M416 88 L416 292" class="fg-line" />
-
-  <!-- branch 1: I/O request -> wait queue -> back to ready -->
-  <path d="M416 136 L392 136" class="fg-line" marker-end="url(#arw-sq)" />
-
-  <rect x="186" y="112" width="198" height="48" rx="10" class="fg-node" />
-
-  <text x="285" y="142" text-anchor="middle" class="fg-text" font-size="13">I/O wait queue</text>
-
-  <path d="M186 136 L44 136" class="fg-line" />
-
-  <text x="404" y="112" text-anchor="end" class="fg-text-muted" font-size="10.5">I/O request</text>
-
-  <!-- branch 2: time slice expired -->
-  <path d="M416 196 L44 196" class="fg-line" />
-
-  <text x="404" y="187" text-anchor="end" class="fg-text-muted" font-size="10.5">time slice expired</text>
-
-  <!-- branch 3: fork a child -->
-  <path d="M416 240 L384 240" class="fg-line" marker-end="url(#arw-sq)" />
-
-  <rect x="196" y="218" width="188" height="44" rx="10" class="fg-node" />
-
-  <text x="290" y="246" text-anchor="middle" class="fg-text" font-size="13">child executes</text>
-
-  <path d="M196 240 L44 240" class="fg-line" />
-
-  <text x="404" y="230" text-anchor="end" class="fg-text-muted" font-size="10.5">fork a child</text>
-
-  <!-- branch 4: wait for an interrupt -->
-  <path d="M416 292 L384 292" class="fg-line" marker-end="url(#arw-sq)" />
-
-  <rect x="196" y="270" width="188" height="44" rx="10" class="fg-node" />
-
-  <text x="290" y="298" text-anchor="middle" class="fg-text" font-size="13">interrupt occurs</text>
-
-  <path d="M196 292 L44 292" class="fg-line" />
-
-  <!-- the return rail: one continuous line carrying every branch above back into
-       the ready queue. Drawn last so it sits over the branch stubs that feed it. -->
-  <path d="M44 292 L44 62 L80 62" class="fg-line" marker-end="url(#arw-sq)" />
+  <text x="410" y="75" text-anchor="middle" class="fg-text" font-size="15">CPU</text>
 
   <!-- termination is the one path that does not come back -->
-  <path d="M460 62 L536 62" class="fg-line" marker-end="url(#arw-sq)" />
+  <path d="M460 68 H520" class="fg-line" marker-end="url(#arw-sq)" />
 
-  <text x="500" y="52" text-anchor="middle" class="fg-text-muted" font-size="10.5">exit</text>
+  <text x="490" y="56" text-anchor="middle" class="fg-text-muted" font-size="10.5">exit</text>
 
-  <text x="546" y="66" class="fg-text-muted" font-size="11">terminated</text>
+  <rect x="520" y="40" width="120" height="56" rx="10" class="fg-node" />
+
+  <text x="580" y="75" text-anchor="middle" class="fg-text" font-size="14">terminated</text>
+
+  <!-- ── trunk down from the CPU, feeding every branch ─────────────────────── -->
+  <path d="M410 96 V316" class="fg-line" />
+
+  <!-- branch 1 (y=148): I/O request -> I/O wait queue -> back to ready -->
+  <path d="M410 148 H340" class="fg-line" marker-end="url(#arw-sq)" />
+
+  <rect x="150" y="126" width="190" height="44" rx="10" class="fg-node" />
+
+  <text x="245" y="153" text-anchor="middle" class="fg-text" font-size="13">I/O wait queue</text>
+
+  <path d="M150 148 H60" class="fg-line" />
+
+  <text x="422" y="152" class="fg-text-muted" font-size="10.5">I/O request</text>
+
+  <!-- branch 2 (y=204): time slice expired — an edge, not a queue -->
+  <path d="M410 204 H60" class="fg-line" />
+
+  <text x="422" y="208" class="fg-text-muted" font-size="10.5">time slice expired</text>
+
+  <!-- branch 3 (y=260): fork a child -> child executes -> back to ready -->
+  <path d="M410 260 H340" class="fg-line" marker-end="url(#arw-sq)" />
+
+  <rect x="150" y="238" width="190" height="44" rx="10" class="fg-node" />
+
+  <text x="245" y="265" text-anchor="middle" class="fg-text" font-size="13">child executes</text>
+
+  <path d="M150 260 H60" class="fg-line" />
+
+  <text x="422" y="264" class="fg-text-muted" font-size="10.5">fork a child</text>
+
+  <!-- branch 4 (y=316): wait for an interrupt -> interrupt occurs -> back to ready -->
+  <path d="M410 316 H340" class="fg-line" marker-end="url(#arw-sq)" />
+
+  <rect x="150" y="294" width="190" height="44" rx="10" class="fg-node" />
+
+  <text x="245" y="321" text-anchor="middle" class="fg-text" font-size="13">interrupt occurs</text>
+
+  <path d="M150 316 H60" class="fg-line" />
+
+  <text x="422" y="320" class="fg-text-muted" font-size="10.5">wait for an interrupt</text>
+
+  <!-- The return rail: one continuous line carrying every branch above back into the
+       ready queue. Drawn last so it sits over the branch stubs that feed it. -->
+  <path d="M60 316 V78 Q60 68 70 68 H120" class="fg-line" marker-end="url(#arw-sq)" />
 </svg>
