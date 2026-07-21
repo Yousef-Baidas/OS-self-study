@@ -13,7 +13,7 @@ GitHub Pages (base path `/OS-self-study/`). Toolchain: Bun. Author + classmates 
 **Core value:** distilled lecture notes + interactive sims that make an OS concept click faster than
 re-reading the slides. Every claim cites its source slide so a student can jump to the deck.
 
-## Current state (2026-07-21)
+## Current state (2026-07-21, later session)
 
 - **Chapter 1 (Introduction)** — complete, live at `/chapters/introduction`. Rewritten from dense
   prose into scannable lecture notes: section `<Lead>` essences, comparison tables for every
@@ -26,8 +26,8 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   reused twice via a `dataset` prop), `OsStructureExplorer` (segmented control across all five
   structures with three render modes), `SyscallJourney` (SimFrame stepper flipping the mode bit
   through fork→exec→wait). Two inline figures (`services-view`, `syscall-parameter-passing`).
-- **Chapter 3 (Processes)** — **notes complete, sims not started.** Live at `/chapters/processes`,
-  marked `status: "draft"` so the page carries a draft banner until the sims and question bank land.
+- **Chapter 3 (Processes)** — **complete.** Live at `/chapters/processes`, `status: "complete"`,
+  no draft banner. Three sims in `src/widgets/ch03/` and a 26-question bank.
   Twelve sections mapped from `OS_chapter3.pptx` (42 slides): program vs process, the memory image,
   the PCB, the five states plus the **round-robin worked trace** from slides 13–14 as a full table,
   context switch, threads and `task_struct`, scheduling queues and the three schedulers,
@@ -36,6 +36,25 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   condition. Four inline theme-aware figures in `src/assets/figures/ch03/`: `memory-layout`,
   `process-state-diagram`, `context-switch` (drawn on a time axis rather than the deck's two-column
   form, so the "pure overhead" gap is visible), `scheduling-queues`.
+
+  The three sims share a principle worth keeping for Ch4+: **each one derives the chapter's
+  published answer rather than encoding it**, and a test holds the two against each other.
+  - **`ForkTree`** — Guided walks 1 → 2 → 4 → 8, Explore adds `if (x == 0) fork();` for 12.
+    Trees come from `src/lib/fork-tree`, geometry from `src/lib/fork-tree-layout`. The canvas
+    anchors its layout to the widest tree it will show, so stepping adds processes without
+    moving or rescaling the ones already drawn.
+  - **`StateTrace`** — the slide 13–14 round-robin run as a scrubbable timeline. `src/lib/round-robin`
+    is a real scheduler run over the burst table; `tests/widgets/ch03/round-robin-trace.test.ts`
+    asserts it reproduces slide 14's eleven rows exactly. Two of the chapter's claims are now
+    executable assertions: no slice exceeds the quantum, and **no process goes from waiting
+    straight to running** (the schedule keeps a zero-width `ready` span rather than collapsing
+    it, so the data can't imply a transition the state diagram denies).
+  - **`RaceCondition`** — slide 42 executed, and in Explore the reader *is* the scheduler:
+    choose who runs next and land on 4, 5 or 6. `src/lib/race-condition`'s test runs all twenty
+    interleavings and asserts the outcomes are exactly the three the chapter names.
+  - **`IpcModels` was deliberately dropped**, per the previous handoff's own call — it is
+    illustrative rather than computational, and the chapter reads fine without it. Pick it up
+    only if Ch3 ever feels thin.
 - **Design system** — **warm-paper + deep-teal** identity (reskinned 2026-07-19 to match the sibling
   `prob-self-study` site's warm family, with its own teal/pine accent instead of prob-web's rust).
   Light = warm paper `#f6f1e7` / cream surfaces; dark = warm espresso `#16120e`; accent `#0d6b60`
@@ -57,7 +76,7 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
   remounts the runner via `{#key}` so its `onMount` re-reads that chapter's own localStorage
   (progress + last score stay per-chapter). Each runner: filter by topic/difficulty → answer
   mcq / true-false / numeric / short → instant feedback with worked solution + slide citation →
-  score + review-your-misses → resumable. 20 Chapter-1 + 22 Chapter-2 questions.
+  score + review-your-misses → resumable. 20 Chapter-1 + 22 Chapter-2 + 26 Chapter-3 questions.
 - **Architecture (2026-07-21)** — the exam slice was carved back into the layout the project
   always intended: **content data beside its widget, framework-free logic in `src/lib/`**
   (the rule and its reasoning are in `docs/ARCHITECTURE.md`). Three new modules, all unit-tested:
@@ -81,6 +100,7 @@ re-reading the slides. Every claim cites its source slide so a student can jump 
 | Figures (inline SVG) | `src/assets/figures/<ch>/*.svg` — rules in **`docs/FIGURES.md`** |
 | Figure contact sheet | `/dev/figures` (dev only) — every figure on one page, for verifying |
 | Sims (per chapter) | `src/widgets/<ch>/*.svelte` + sibling `*.ts` content data |
+| Sim algorithms + geometry | `src/lib/{fork-tree,fork-tree-layout,round-robin,trace-layout,race-condition}.ts` |
 | Exam questions | `src/content/questions/<ch>.json` (schema in `src/content.config.ts`) |
 | Exam logic | `src/lib/exam-engine.ts` (grading, queue, scoring), `src/lib/progress-store.ts` (persistence) |
 | Exam UI | `src/widgets/exam/{ExamShell,QuizRunner}.svelte`, page `src/pages/exam/index.astro` |
@@ -99,63 +119,22 @@ hard-refresh to beat the Pages cache after a deploy.
 
 ## Next up
 
-**Start here: finish Chapter 3.** The notes are live; what remains is four sims and the question
-bank. Work items 1–3 below are all Chapter 3, in the order they were planned.
+**Chapter 3 is finished — start with Chapter 4.** The suite is green: **189 tests, 18 files**,
+`astro check` and `svelte-check` both clean apart from one long-standing `ExamShell` warning
+(see Known rough edges).
 
-### ⚠️ First thing to know: `bun run test` is currently RED
-
-`src/lib/fork-tree.ts` was committed one function short, on purpose (commit `cc944a4`).
-**`growGeneration` throws**, and the 11 tests in `tests/lib/fork-tree.test.ts` are its spec —
-they were written first and are meant to be made green, not deleted. Everything else in the suite
-passes (110 tests). Nothing imports this module yet, and CI only runs `astro build`, so the live
-site is unaffected.
-
-The function returns a new tree in which every process `shouldFork` accepts has gained one child.
-The whole contract, and the reason it exists, is in the TODO comment above it. The one rule that
-matters: **snapshot the population before anyone forks** — append while traversing and newborns
-join the same generation, giving 8 processes after two calls instead of 4. `cloneTree()` and
-`levelOrder()` are already there for exactly this. It is about six lines.
-
-1. **Chapter 3 sims (4 planned, 0 built).** All four mount inside `SimFrame`
-   (`title`, `caption`, `totalSteps`, `bind:step`, `bind:mode`), which already owns the
-   guided/explore toggle, the step strip, Previous/Step/Reset, and the roving-tabindex keyboard
-   model — a new sim supplies only its canvas. Put step/content data in a sibling
-   `src/widgets/ch03/*.ts` and unit-test its shape, matching the five existing data modules.
-
-   ⚠️ **`ForkTree` and `StateTrace` draw SVG, so read `docs/FIGURES.md` first.** It is the
-   canonical diagram spec and it applies to sim canvases exactly as it does to the static
-   chapter figures. The Chapter 3 figures had to be redrawn once already (`7676974`) because
-   they were built without it — orthogonal connectors meeting edge midpoints, endpoints that
-   are literally node edge coordinates, tiled regions square, labels in gutters no line crosses.
-   In a sim you get this nearly free: derive positions and connector paths from the layout
-   function in `src/lib/` and unit-test that endpoints equal node edges, instead of asserting
-   coordinates by hand the way a static `.svg` has to. Verify on `/dev/figures` in both themes.
-   - **`ForkTree`** — slides 33–34, the chapter's recurring exam question. Guided steps through
-     1 → 2 → 4 → 8 as each `fork()` doubles the population; Explore toggles the trailing
-     `if (x == 0) fork();` to reach 12. Logic is already scaffolded in `src/lib/fork-tree.ts`
-     (`forkStages()` returns one immutable tree per step, so Previous is just an array index —
-     no inverse operation to write). **Finish `growGeneration` first.**
-   - **`StateTrace`** — slides 13–14 as a scrubbable timeline: P1/P2/P3 rows, cells coloured by
-     state, scrub 0 → 27 ms. The trace table is already in the MDX, so the sim adds the scrub, not
-     the data. Schedule computation belongs in `src/lib/`, unit-tested, same as fork-tree.
-   - **`RaceCondition`** — slide 42. Step S0–S5 watching `register1`/`register2`/`counter`
-     diverge; Explore lets the reader reorder the interleaving to produce 4, 5, or 6.
-   - **`IpcModels`** — slide 39. Shared memory vs message passing side by side; send a message
-     under each and watch whether it crosses the kernel boundary. Lowest payoff of the four —
-     it is illustrative rather than computational, so drop it if time is short.
-2. **Chapter 3 question bank** — add `src/content/questions/ch03.json`. The exam page globs every
-   chapter and auto-groups it into the `ExamShell` switcher, so no page change is needed. Ch1 has
-   20 questions and Ch2 has 22; aim for a comparable set. Remember the dev-server restart (see
-   Gotchas). Obvious question material: ready-vs-waiting, why waiting can't re-enter running
-   directly, fork counting (both variants), zombie vs orphan, the three schedulers by frequency,
-   and why the race condition's damage happens at S2.
-3. **Flip Chapter 3 to `status: "complete"`** in the MDX frontmatter once 1 and 2 land — that is
-   what removes the draft banner.
-4. **Chapters 4–10 content** — one chapter per session after this. Decks are in `CONTENT/slides/`
+1. **Chapters 4–10 content** — one chapter per session. Decks are in `CONTENT/slides/`
    (note: **no `OS_chapter7.pptx`** — the course skips it). Extract per-slide text for accurate
    citations with a `python3` unzip of the `.pptx`; the snippet used for Ch1–Ch3 walks
    `ppt/slides/slideN.xml` and joins every `<a:t>` run per paragraph.
-5. **Exam UX, when wanted** — cross-chapter mixed sets, timed mode, per-topic accuracy history.
+
+   **The pattern Ch3 settled on, worth repeating:** write the notes, then for each sim ask what
+   the chapter *asserts* and make the sim derive it rather than restate it. Every Ch3 sim has a
+   framework-free module in `src/lib/` whose test checks it against the deck's published answer
+   (`round-robin` vs slide 14's table, `race-condition` vs slide 42's three outcomes,
+   `fork-tree` vs 8 and 12). That is what makes a sim able to be *wrong* — and therefore worth
+   trusting when it is right.
+2. **Exam UX, when wanted** — cross-chapter mixed sets, timed mode, per-topic accuracy history.
    These are now changes to `src/lib/exam-engine.ts` with tests, not surgery inside the island:
    mixed sets are a `buildQueue` over several banks, accuracy history is another `progress-store`
    key. `PASS_PCT` is a constant there if the pass mark should move.
@@ -165,6 +144,11 @@ join the same generation, giving 8 processes after two calls instead of 4. `clon
 None of these is urgent — they are the honest list of what a future session might pick up, in
 rough order of value.
 
+- **`SimFrame`'s step strip is misleading in Explore mode.** It shows "Step 4 of 4" (or
+  "Step 1 of 7") while Explore is active, because the strip only special-cases
+  `mode === 'guided' && isFinalStep`. Explore doesn't step, so the counter is stale noise. All
+  five — now eight — sims share it. A one-line fix in `SimFrame.svelte`'s step strip, but it
+  changes every sim at once, so it wants a deliberate look rather than a drive-by.
 - **`ExamShell.svelte:22`** — svelte-check warns that `groups` is read non-reactively inside
   `onMount`. Harmless today (the prop never changes after mount, and switching chapters remounts
   the runner), but it is the last warning in the tree if you want zero.
@@ -212,6 +196,12 @@ rough order of value.
   label sat inside the boxes' vertical span and overlapped one. Screenshot each `<figure>` element
   after writing it (`page.locator('figure').nth(i).screenshot(...)`), at mobile width, in **both**
   themes — the `.fg-*` classes mean light and dark are genuinely different renders.
+- **Float drift breaks tiling, and only a boundary-based layout fixes it.** In a timeline (or any
+  contiguous region) a segment's far edge computed as `x + width` does not land on the next
+  segment's `x` — `trace-layout` was one ulp short of the track end (343.99999999999994 for a
+  27 ms run). Store **boundaries** (`x`, `xEnd`) so both sides of a seam are literally the same
+  computed number, derive `width` at render time, and scale with `t / total` so the ratio is
+  exactly 1 at the end. Applies to any future Gantt/timeline figure.
 - **Unit-green is not verified** for anything with a DOM behaviour. The roving-index extraction
   passed all 57 tests while silently scrolling the page 40px on a locked segment — the defect was
   in what the interface failed to distinguish, and only a browser showed it.
